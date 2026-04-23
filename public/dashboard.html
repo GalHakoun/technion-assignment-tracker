@@ -65,6 +65,9 @@
         <button class="btn-no" onclick="answerUncertain(false)">&#10060; Not homework</button>
       </div>
       <div class="modal-progress" id="modal-progress"></div>
+      <div style="text-align:center;margin-top:0.75rem">
+        <button onclick="skipAllUncertain()" style="background:none;border:none;color:var(--text-muted);font-size:0.8rem;cursor:pointer;text-decoration:underline">Skip all remaining</button>
+      </div>
     </div>
   </div>
 
@@ -231,6 +234,11 @@
       showNextUncertain();
     }
 
+    function skipAllUncertain() {
+      document.getElementById('modal-overlay').style.display = 'none';
+      loadAssignments();
+    }
+
     function extractCourse(title) {
       if (!title) return null;
       const i = title.indexOf(':');
@@ -261,43 +269,63 @@
         return;
       }
 
-      const now = new Date();
-      const cards = assignments.map(a => {
-        const due = a.due_date ? new Date(a.due_date) : null;
-        let urgency = 'ok', countdown = '';
+      // Group by course_name
+      const grouped = {};
+      for (const a of assignments) {
+        const key = a.course_name || '—';
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(a);
+      }
 
-        if (due) {
-          const days = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
-          if (days < 0) {
-            urgency = 'overdue';
-            countdown = `Overdue by ${Math.abs(days)}d`;
-          } else if (days <= 3) {
-            urgency = 'soon';
-            countdown = days === 0 ? 'Due today!' : `${days}d left`;
-          } else {
-            urgency = 'ok';
-            countdown = `${days}d left`;
-          }
+      const sortedCourses = Object.keys(grouped).sort((a, b) => a.localeCompare(b, 'he'));
+
+      let html = '<div class="assignment-list">';
+      for (const course of sortedCourses) {
+        html += `<div class="course-section">
+          <div class="course-header">${escHtml(course)}</div>`;
+        for (const a of grouped[course]) {
+          html += renderCard(a);
         }
+        html += '</div>';
+      }
+      html += '</div>';
 
-        const dueFmt = due
-          ? due.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-          : '—';
+      container.innerHTML = html;
+    }
 
-        return `
-          <div class="assignment-card ${urgency}">
-            <div class="assignment-info">
-              <div class="assignment-title">${escHtml(a.title)}</div>
-              ${a.course_name ? `<div class="assignment-course">${escHtml(a.course_name)}</div>` : ''}
-            </div>
-            <div class="assignment-due">
-              <div class="due-date">${dueFmt}</div>
-              ${countdown ? `<div class="due-countdown ${urgency}">${countdown}</div>` : ''}
-            </div>
-          </div>`;
-      }).join('');
+    function renderCard(a) {
+      const now = new Date();
+      const due = a.due_date ? new Date(a.due_date) : null;
+      let urgency = 'ok', countdown = '';
 
-      container.innerHTML = `<div class="assignment-list">${cards}</div>`;
+      if (due) {
+        const days = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
+        if (days < 0) {
+          urgency = 'overdue';
+          countdown = `Overdue by ${Math.abs(days)}d`;
+        } else if (days <= 3) {
+          urgency = 'soon';
+          countdown = days === 0 ? 'Due today!' : `${days}d left`;
+        } else {
+          urgency = 'ok';
+          countdown = `${days}d left`;
+        }
+      }
+
+      const dueFmt = due
+        ? due.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+        : '—';
+
+      return `
+        <div class="assignment-card ${urgency}">
+          <div class="assignment-info">
+            <div class="assignment-title">${escHtml(a.title)}</div>
+          </div>
+          <div class="assignment-due">
+            <div class="due-date">${dueFmt}</div>
+            ${countdown ? `<div class="due-countdown ${urgency}">${countdown}</div>` : ''}
+          </div>
+        </div>`;
     }
 
     function escHtml(str) {

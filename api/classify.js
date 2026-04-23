@@ -1,7 +1,16 @@
 const { createClient } = require('@supabase/supabase-js');
 
-const HOMEWORK_KW = ['הגשה', 'assignment', 'deadline', 'due date', 'submit', ' hw', 'hw ', 'תרגיל', 'homework'];
-const NOT_HW_KW  = ['zoom', 'lecture', 'שיעור', 'הרצאה', 'office hours', 'בחינה סופית', 'final exam', 'מפגש'];
+const HOMEWORK_KW = ['הגשה', 'assignment', 'deadline', 'due date', 'submit', ' hw', 'hw ', 'תרגיל', 'homework', 'פרויקט', 'project'];
+const NOT_HW_KW  = [
+  // Video/meetings
+  'zoom', 'webex', 'teams',
+  // Hebrew class types
+  'הרצאה', 'שיעור', 'תרגול', 'מעבדה', 'סדנה', 'סדנאות', 'מפגש', 'קבלת קהל', 'שעות קבלה', 'ייעוץ',
+  // English class types
+  'lecture', 'tutorial', 'lab ', 'office hours', 'recitation', 'seminar',
+  // Exams
+  'בחינה', 'מבחן', 'בוחן', 'exam', 'quiz', 'midterm', 'final',
+];
 
 function classify(title, description) {
   const text = ((title || '') + ' ' + (description || '')).toLowerCase();
@@ -12,8 +21,12 @@ function classify(title, description) {
 
 function extractCourse(title) {
   if (!title) return null;
+  // "Course: Event" format
   const i = title.indexOf(':');
   if (i > 0 && i < 60) return title.substring(0, i).trim();
+  // "Event (Course)" format
+  const paren = title.match(/\(([^)]+)\)\s*$/);
+  if (paren) return paren[1].trim();
   return null;
 }
 
