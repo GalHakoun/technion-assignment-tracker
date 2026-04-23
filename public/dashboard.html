@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Technion Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-brand">&#128218; Technion Tracker</div>
+    <div class="navbar-right">
+      <span class="user-email" id="user-email"></span>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="dashboard-content">
+
+    <!-- Settings -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">&#9881;&#65039; Settings</div>
+      </div>
+      <div id="settings-message" style="display:none" class="message"></div>
+      <div class="settings-row">
+        <div class="form-group">
+          <label for="moodle-url">Moodle iCal URL</label>
+          <input
+            type="url"
+            id="moodle-url"
+            placeholder="https://moodle.technion.ac.il/calendar/export.php?..."
+          >
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+      </div>
+    </div>
+
+    <!-- Assignments -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">&#128203; Your Assignments</div>
+        <button class="btn-sync" id="sync-btn" onclick="syncNow()">Sync Now</button>
+      </div>
+      <div id="sync-message" style="display:none" class="message"></div>
+      <div class="assignments-placeholder">
+        <div class="placeholder-icon">&#128193;</div>
+        <p>Your assignments will appear here after you sync.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const { createClient } = supabase;
+    const sb = createClient(
+      'https://rcngaonfuljhtthsvpap.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbmdhb25mdWxqaHR0aHN2cGFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjUyMjMsImV4cCI6MjA5MjUwMTIyM30.5Ig-xpFdKGcK7U_l1jauGb8dSci6atmJoDng2p1A9N0'
+    );
+
+    let currentUser = null;
+
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) {
+        window.location.href = 'index.html';
+        return;
+      }
+      currentUser = session.user;
+      document.getElementById('user-email').textContent = currentUser.email;
+      await loadProfile();
+    }
+
+    async function loadProfile() {
+      const { data } = await sb
+        .from('profiles')
+        .select('moodle_ical_url')
+        .eq('user_id', currentUser.id)
+        .single();
+      if (data?.moodle_ical_url) {
+        document.getElementById('moodle-url').value = data.moodle_ical_url;
+      }
+    }
+
+    async function saveSettings() {
+      const url = document.getElementById('moodle-url').value.trim();
+      showSettingsMessage('', '');
+
+      const { error } = await sb.from('profiles').upsert(
+        { user_id: currentUser.id, moodle_ical_url: url },
+        { onConflict: 'user_id' }
+      );
+
+      if (error) {
+        showSettingsMessage('Failed to save: ' + error.message, 'error');
+      } else {
+        showSettingsMessage('Settings saved!', 'success');
+        setTimeout(() => showSettingsMessage('', ''), 3000);
+      }
+    }
+
+    function showSettingsMessage(text, type) {
+      const el = document.getElementById('settings-message');
+      if (!text) { el.style.display = 'none'; return; }
+      el.textContent = text;
+      el.className = 'message ' + type;
+      el.style.display = 'block';
+    }
+
+    async function syncNow() {
+      const btn = document.getElementById('sync-btn');
+      btn.disabled = true;
+      btn.textContent = 'Syncing...';
+      showSyncMessage('', '');
+
+      const { data: { session } } = await sb.auth.getSession();
+
+      const res = await fetch('/api/fetch', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + session.access_token },
+      });
+      const json = await res.json();
+
+      if (!res.ok) {
+        showSyncMessage(json.error || 'Sync failed.', 'error');
+      } else {
+        showSyncMessage(`Synced ${json.count} events from Moodle!`, 'success');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Sync Now';
+    }
+
+    function showSyncMessage(text, type) {
+      const el = document.getElementById('sync-message');
+      if (!text) { el.style.display = 'none'; return; }
+      el.textContent = text;
+      el.className = 'message ' + type;
+      el.style.display = 'block';
+    }
+
+    async function logout() {
+      await sb.auth.signOut();
+      window.location.href = 'index.html';
+    }
+
+    init();
+  </script>
+
+</body>
+</html>

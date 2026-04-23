@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Technion Assignment Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="auth-container">
+    <div class="auth-logo">&#128218; Technion Tracker</div>
+    <p class="auth-tagline">Track all your Moodle assignments in one place</p>
+
+    <div class="auth-card">
+      <div class="tabs">
+        <div class="tab active" id="tab-login" onclick="switchTab('login')">Login</div>
+        <div class="tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</div>
+      </div>
+
+      <div id="message" style="display:none" class="message"></div>
+
+      <form id="auth-form" onsubmit="handleSubmit(event)">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="your@email.com" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Password" required minlength="6" autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary" id="submit-btn">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const { createClient } = supabase;
+    const sb = createClient(
+      'https://rcngaonfuljhtthsvpap.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbmdhb25mdWxqaHR0aHN2cGFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjUyMjMsImV4cCI6MjA5MjUwMTIyM30.5Ig-xpFdKGcK7U_l1jauGb8dSci6atmJoDng2p1A9N0'
+    );
+
+    let currentTab = 'login';
+
+    // Redirect to dashboard if already logged in
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session) window.location.href = 'dashboard.html';
+    });
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+      document.getElementById('submit-btn').textContent = tab === 'login' ? 'Login' : 'Create Account';
+      document.getElementById('password').autocomplete = tab === 'login' ? 'current-password' : 'new-password';
+      hideMessage();
+    }
+
+    function showMessage(text, type) {
+      const el = document.getElementById('message');
+      el.textContent = text;
+      el.className = 'message ' + type;
+      el.style.display = 'block';
+    }
+
+    function hideMessage() {
+      document.getElementById('message').style.display = 'none';
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const btn = document.getElementById('submit-btn');
+
+      btn.disabled = true;
+      btn.textContent = currentTab === 'login' ? 'Logging in...' : 'Creating account...';
+      hideMessage();
+
+      if (currentTab === 'login') {
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) {
+          showMessage(error.message, 'error');
+          btn.disabled = false;
+          btn.textContent = 'Login';
+        } else {
+          window.location.href = 'dashboard.html';
+        }
+      } else {
+        const { error } = await sb.auth.signUp({ email, password });
+        if (error) {
+          showMessage(error.message, 'error');
+          btn.disabled = false;
+          btn.textContent = 'Create Account';
+        } else {
+          showMessage('Account created! Check your email to confirm your address, then log in.', 'success');
+          btn.disabled = false;
+          btn.textContent = 'Create Account';
+        }
+      }
+    }
+  </script>
+
+</body>
+</html>
