@@ -26,6 +26,18 @@ function fetchIcal(url) {
   });
 }
 
+function serializeEvent(e) {
+  const out = {};
+  for (const [key, val] of Object.entries(e)) {
+    try {
+      out[key] = JSON.parse(JSON.stringify(val));
+    } catch (_) {
+      out[key] = String(val);
+    }
+  }
+  return out;
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'authorization, content-type');
@@ -78,15 +90,7 @@ module.exports = async function handler(req, res) {
       description: typeof e.description === 'string' ? e.description : '',
       start_time: e.start ? new Date(e.start).toISOString() : null,
       end_time: e.end ? new Date(e.end).toISOString() : null,
-      raw_data: {
-        uid: e.uid,
-        summary: e.summary,
-        description: e.description,
-        start: e.start,
-        end: e.end,
-        categories: e.categories,
-        url: e.url,
-      },
+      raw_data: serializeEvent(e),
     }));
 
   if (rows.length === 0) {
