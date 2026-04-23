@@ -1,5 +1,30 @@
 const { createClient } = require('@supabase/supabase-js');
 const ical = require('node-ical');
+const https = require('https');
+const http = require('http');
+
+function fetchIcal(url) {
+  return new Promise((resolve, reject) => {
+    const lib = url.startsWith('https') ? https : http;
+    const req = lib.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; TechnionTracker/1.0)',
+        'Accept': 'text/calendar, text/plain, */*',
+      }
+    }, (res) => {
+      if (res.statusCode === 301 || res.statusCode === 302) {
+        return resolve(fetchIcal(res.headers.location));
+      }
+      if (res.statusCode !== 200) {
+        return reject(new Error(`Request failed with status code ${res.statusCode}`));
+      }
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => resolve(data));
+    });
+    req.on('error', reject);
+  });
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -38,7 +63,8 @@ module.exports = async function handler(req, res) {
 
   let parsed;
   try {
-    parsed = await ical.async.fromURL(profile.moodle_ical_url);
+    const icalText = await fetchIcal(profile.moodle_ical_url);
+    parsed = ical.sync.parseICS(icalText);
   } catch (err) {
     return res.status(400).json({ error: 'Could not fetch Moodle calendar: ' + err.message });
   }
