@@ -30,7 +30,7 @@
           <input
             type="url"
             id="moodle-url"
-            placeholder="https://moodle.technion.ac.il/calendar/export.php?..."
+            placeholder="https://moodle25.technion.ac.il/calendar/export_execute.php?..."
           >
         </div>
         <button class="btn btn-primary" onclick="saveSettings()">Save</button>
@@ -44,12 +44,28 @@
         <button class="btn-sync" id="sync-btn" onclick="syncNow()">Sync Now</button>
       </div>
       <div id="sync-message" style="display:none" class="message"></div>
-      <div class="assignments-placeholder">
-        <div class="placeholder-icon">&#128193;</div>
-        <p>Your assignments will appear here after you sync.</p>
+      <div id="assignments-container">
+        <div class="assignments-placeholder">
+          <div class="placeholder-icon">&#128193;</div>
+          <p>Your assignments will appear here after you sync.</p>
+        </div>
       </div>
     </div>
 
+  </div>
+
+  <!-- Uncertain classification popup -->
+  <div class="modal-overlay" id="modal-overlay" style="display:none">
+    <div class="modal-card">
+      <div class="modal-heading">Is this a homework assignment?</div>
+      <div class="modal-sub">Help us learn what to track for you.</div>
+      <div class="modal-event-title" id="modal-event-title"></div>
+      <div class="modal-actions">
+        <button class="btn-yes" onclick="answerUncertain(true)">&#9989; Yes, homework</button>
+        <button class="btn-no" onclick="answerUncertain(false)">&#10060; Not homework</button>
+      </div>
+      <div class="modal-progress" id="modal-progress"></div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -61,16 +77,16 @@
     );
 
     let currentUser = null;
+    let uncertainQueue = [];
+    let uncertainIndex = 0;
 
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
-      if (!session) {
-        window.location.href = 'index.html';
-        return;
-      }
+      if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user;
       document.getElementById('user-email').textContent = currentUser.email;
       await loadProfile();
+      await loadAssignments();
     }
 
     async function loadProfile() {
@@ -87,12 +103,10 @@
     async function saveSettings() {
       const url = document.getElementById('moodle-url').value.trim();
       showSettingsMessage('', '');
-
       const { error } = await sb.from('profiles').upsert(
         { user_id: currentUser.id, moodle_ical_url: url },
         { onConflict: 'user_id' }
       );
-
       if (error) {
         showSettingsMessage('Failed to save: ' + error.message, 'error');
       } else {
@@ -109,28 +123,57 @@
       el.style.display = 'block';
     }
 
+    // ── Sync flow ──
+
     async function syncNow() {
       const btn = document.getElementById('sync-btn');
       btn.disabled = true;
-      btn.textContent = 'Syncing...';
+      btn.textContent = 'Fetching...';
       showSyncMessage('', '');
 
       const { data: { session } } = await sb.auth.getSession();
+      const token = session.access_token;
 
-      const res = await fetch('/api/fetch', {
+      // Step 1: fetch raw events
+      const fetchRes = await fetch('/api/fetch', {
         method: 'POST',
-        headers: { Authorization: 'Bearer ' + session.access_token },
+        headers: { Authorization: 'Bearer ' + token },
       });
-      const json = await res.json();
+      const fetchJson = await fetchRes.json();
 
-      if (!res.ok) {
-        showSyncMessage(json.error || 'Sync failed.', 'error');
-      } else {
-        showSyncMessage(`Synced ${json.count} events from Moodle!`, 'success');
+      if (!fetchRes.ok) {
+        showSyncMessage(fetchJson.error || 'Sync failed.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Sync Now';
+        return;
       }
+
+      // Step 2: classify
+      btn.textContent = 'Classifying...';
+      const classifyRes = await fetch('/api/classify', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + token },
+      });
+      const classifyJson = await classifyRes.json();
 
       btn.disabled = false;
       btn.textContent = 'Sync Now';
+
+      if (!classifyRes.ok) {
+        showSyncMessage(classifyJson.error || 'Classification failed.', 'error');
+        return;
+      }
+
+      const msg = `Synced ${fetchJson.count} events · Found ${classifyJson.homework_added} new assignments` +
+        (classifyJson.uncertain_count > 0 ? ` · ${classifyJson.uncertain_count} need your input` : '');
+      showSyncMessage(msg, 'success');
+
+      // Step 3: show uncertain popup if needed, then load assignments
+      if (classifyJson.uncertain_events?.length > 0) {
+        startUncertainQueue(classifyJson.uncertain_events);
+      } else {
+        await loadAssignments();
+      }
     }
 
     function showSyncMessage(text, type) {
@@ -139,6 +182,130 @@
       el.textContent = text;
       el.className = 'message ' + type;
       el.style.display = 'block';
+    }
+
+    // ── Uncertain popup ──
+
+    function startUncertainQueue(events) {
+      uncertainQueue = events;
+      uncertainIndex = 0;
+      showNextUncertain();
+    }
+
+    function showNextUncertain() {
+      if (uncertainIndex >= uncertainQueue.length) {
+        document.getElementById('modal-overlay').style.display = 'none';
+        loadAssignments();
+        return;
+      }
+      const event = uncertainQueue[uncertainIndex];
+      document.getElementById('modal-event-title').textContent = event.title || '(no title)';
+      document.getElementById('modal-progress').textContent =
+        `${uncertainIndex + 1} of ${uncertainQueue.length}`;
+      document.getElementById('modal-overlay').style.display = 'flex';
+    }
+
+    async function answerUncertain(isHomework) {
+      const event = uncertainQueue[uncertainIndex];
+      const classification = isHomework ? 'homework' : 'not_homework';
+
+      await sb.from('classifications').upsert(
+        { user_id: currentUser.id, normalized_title: event.normalized_title, classification },
+        { onConflict: 'user_id,normalized_title' }
+      );
+
+      if (isHomework) {
+        await sb.from('assignments').upsert(
+          {
+            user_id: currentUser.id,
+            raw_event_id: event.id,
+            title: event.title,
+            course_name: extractCourse(event.title),
+            due_date: event.due_date,
+          },
+          { onConflict: 'user_id,raw_event_id' }
+        );
+      }
+
+      uncertainIndex++;
+      showNextUncertain();
+    }
+
+    function extractCourse(title) {
+      if (!title) return null;
+      const i = title.indexOf(':');
+      if (i > 0 && i < 60) return title.substring(0, i).trim();
+      return null;
+    }
+
+    // ── Assignments display ──
+
+    async function loadAssignments() {
+      const { data, error } = await sb
+        .from('assignments')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('due_date', { ascending: true });
+
+      renderAssignments(error ? [] : (data || []));
+    }
+
+    function renderAssignments(assignments) {
+      const container = document.getElementById('assignments-container');
+      if (!assignments.length) {
+        container.innerHTML = `
+          <div class="assignments-placeholder">
+            <div class="placeholder-icon">&#128193;</div>
+            <p>Your assignments will appear here after you sync.</p>
+          </div>`;
+        return;
+      }
+
+      const now = new Date();
+      const cards = assignments.map(a => {
+        const due = a.due_date ? new Date(a.due_date) : null;
+        let urgency = 'ok', countdown = '';
+
+        if (due) {
+          const days = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
+          if (days < 0) {
+            urgency = 'overdue';
+            countdown = `Overdue by ${Math.abs(days)}d`;
+          } else if (days <= 3) {
+            urgency = 'soon';
+            countdown = days === 0 ? 'Due today!' : `${days}d left`;
+          } else {
+            urgency = 'ok';
+            countdown = `${days}d left`;
+          }
+        }
+
+        const dueFmt = due
+          ? due.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+          : '—';
+
+        return `
+          <div class="assignment-card ${urgency}">
+            <div class="assignment-info">
+              <div class="assignment-title">${escHtml(a.title)}</div>
+              ${a.course_name ? `<div class="assignment-course">${escHtml(a.course_name)}</div>` : ''}
+            </div>
+            <div class="assignment-due">
+              <div class="due-date">${dueFmt}</div>
+              ${countdown ? `<div class="due-countdown ${urgency}">${countdown}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+
+      container.innerHTML = `<div class="assignment-list">${cards}</div>`;
+    }
+
+    function escHtml(str) {
+      return (str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
     }
 
     async function logout() {
