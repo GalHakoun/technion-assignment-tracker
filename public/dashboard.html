@@ -365,29 +365,63 @@
         return;
       }
 
-      // Group by course_name, resolve number to display name
-      const grouped = {};
-      for (const a of assignments) {
-        const key = a.course_name || '—';
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(a);
-      }
+      const active = assignments.filter(a => !a.completed);
+      const done = assignments.filter(a => a.completed);
 
-      const sortedCourses = Object.keys(grouped).sort((a, b) => a.localeCompare(b, 'he'));
+      function buildGroups(list) {
+        const grouped = {};
+        for (const a of list) {
+          const key = a.course_name || '—';
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push(a);
+        }
+        const sorted = Object.keys(grouped).sort((a, b) => a.localeCompare(b, 'he'));
+        let html = '';
+        for (const course of sorted) {
+          const displayName = courseNameMap[course] || course;
+          html += `<div class="course-section"><div class="course-header">${escHtml(displayName)}</div>`;
+          for (const a of grouped[course]) html += renderCard(a);
+          html += '</div>';
+        }
+        return html;
+      }
 
       let html = '<div class="assignment-list">';
-      for (const course of sortedCourses) {
-        const displayName = courseNameMap[course] || course;
-        html += `<div class="course-section">
-          <div class="course-header">${escHtml(displayName)}</div>`;
-        for (const a of grouped[course]) {
-          html += renderCard(a);
-        }
-        html += '</div>';
+      if (active.length) {
+        html += buildGroups(active);
+      } else {
+        html += `<div class="assignments-placeholder" style="padding:2rem 1rem">
+          <div class="placeholder-icon">&#9989;</div>
+          <p>כל המטלות הושלמו!</p>
+        </div>`;
       }
-      html += '</div>';
 
+      if (done.length) {
+        html += `<div class="completed-toggle" onclick="toggleCompleted(this)">
+          &#9660; ${done.length} הושלמו
+        </div>
+        <div class="completed-section" style="display:none">
+          ${buildGroups(done)}
+        </div>`;
+      }
+
+      html += '</div>';
       container.innerHTML = html;
+    }
+
+    function toggleCompleted(btn) {
+      const section = btn.nextElementSibling;
+      const isOpen = section.style.display !== 'none';
+      section.style.display = isOpen ? 'none' : 'block';
+      btn.innerHTML = `${isOpen ? '&#9660;' : '&#9650;'} ${btn.textContent.trim().split(' ').slice(1).join(' ')}`;
+    }
+
+    async function toggleComplete(id, current) {
+      await sb.from('assignments')
+        .update({ completed: !current })
+        .eq('id', id)
+        .eq('user_id', currentUser.id);
+      await loadAssignments();
     }
 
     function renderCard(a) {
@@ -395,7 +429,7 @@
       const due = a.due_date ? new Date(a.due_date) : null;
       let urgency = 'ok', countdown = '';
 
-      if (due) {
+      if (!a.completed && due) {
         const days = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
         if (days < 0) {
           urgency = 'overdue';
@@ -413,8 +447,13 @@
         ? due.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
         : '—';
 
+      const completedClass = a.completed ? 'completed' : '';
+
       return `
-        <div class="assignment-card ${urgency}">
+        <div class="assignment-card ${urgency} ${completedClass}">
+          <button class="btn-complete" onclick="toggleComplete('${a.id}', ${a.completed})" title="${a.completed ? 'Mark incomplete' : 'Mark done'}">
+            ${a.completed ? '&#9989;' : '&#9711;'}
+          </button>
           <div class="assignment-info">
             <div class="assignment-title">${escHtml(a.title)}</div>
           </div>
