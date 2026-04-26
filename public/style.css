@@ -204,6 +204,20 @@ input:focus {
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.navbar-logo {
+  height: 32px;
+  width: auto;
+}
+
+.auth-logo-img {
+  height: 48px;
+  width: auto;
+  vertical-align: middle;
 }
 
 .navbar-right {
