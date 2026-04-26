@@ -684,18 +684,17 @@ input:focus {
 
 /* ── Navbar badge ── */
 
-.nav-badge {
+.task-count {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  background: var(--error);
-  color: white;
-  font-size: 0.78rem;
+  background: var(--border);
+  color: var(--text-muted);
+  font-size: 0.75rem;
   font-weight: 600;
-  height: 26px;
-  border-radius: 13px;
-  padding: 0 0.7rem;
-  margin-inline-end: 0.75rem;
+  height: 22px;
+  border-radius: 11px;
+  padding: 0 0.6rem;
+  margin-inline-start: 0.5rem;
   vertical-align: middle;
   white-space: nowrap;
 }

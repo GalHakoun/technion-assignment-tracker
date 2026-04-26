@@ -10,14 +10,10 @@
 
   <nav class="navbar">
     <div class="navbar-right">
-      <span class="user-email" id="user-email"></span>
-      <button class="btn-settings" onclick="openSettings()" title="Settings">&#9881;&#65039;</button>
       <button class="btn-logout" onclick="logout()">התנתק</button>
+      <button class="btn-settings" onclick="openSettings()" title="Settings">&#9881;&#65039;</button>
     </div>
-    <div class="navbar-brand">
-      &#128218; Technion Tracker
-      <span class="nav-badge" id="nav-badge" style="display:none"><span id="nav-badge-count"></span> משימות להגשה</span>
-    </div>
+    <div class="navbar-brand">&#128218; Technion Tracker</div>
   </nav>
 
   <div class="dashboard-content">
@@ -25,7 +21,7 @@
     <!-- Assignments -->
     <div class="card">
       <div class="card-header">
-        <div class="card-title">&#128203; המטלות שלך</div>
+        <div class="card-title">&#128203; המטלות שלך <span class="task-count" id="nav-badge" style="display:none"><span id="nav-badge-count"></span> משימות</span></div>
         <div style="display:flex;gap:0.5rem">
           <button class="btn-add" onclick="openAddModal()" title="הוספת מטלה">&#43;</button>
           <button class="btn-sync" id="sync-btn" onclick="syncNow()">סנכרן</button>
@@ -207,7 +203,6 @@
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user;
-      document.getElementById('user-email').textContent = currentUser.email;
       const hasUrl = await loadProfile();
       if (!hasUrl) { window.location.href = 'onboarding.html'; return; }
       await loadCourseNames();
