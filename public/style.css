@@ -426,6 +426,50 @@ input:focus {
 
 .completed-toggle:hover { color: var(--text); }
 
+.btn-hide-course {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--border);
+  font-size: 0.75rem;
+  padding: 0 0.25rem;
+  margin-right: auto;
+  line-height: 1;
+  transition: color 0.2s;
+  float: left;
+}
+
+.btn-hide-course:hover { color: var(--error); }
+
+.hidden-course-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.hidden-course-row:last-child { border-bottom: none; }
+
+.btn-unhide {
+  background: none;
+  border: 1.5px solid var(--accent);
+  color: var(--accent);
+  border-radius: 6px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-unhide:hover {
+  background: var(--accent);
+  color: white;
+}
+
 /* ── Uncertain popup modal ── */
 
 .modal-overlay {

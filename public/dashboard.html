@@ -84,6 +84,10 @@
         <button class="btn-yes" onclick="saveSettings()">Save</button>
         <button class="btn-no" onclick="closeSettings()">Cancel</button>
       </div>
+      <div id="hidden-courses-section" style="display:none;margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1.25rem">
+        <div style="font-size:0.875rem;font-weight:600;margin-bottom:0.75rem">Hidden Courses</div>
+        <div id="hidden-courses-list"></div>
+      </div>
     </div>
   </div>
 
@@ -99,6 +103,25 @@
     let uncertainQueue = [];
     let uncertainIndex = 0;
     let courseNameMap = {};
+
+    function hiddenCoursesKey() { return `hidden_courses_${currentUser.id}`; }
+    function getHiddenCourses() { return new Set(JSON.parse(localStorage.getItem(hiddenCoursesKey()) || '[]')); }
+    function saveHiddenCourses(set) { localStorage.setItem(hiddenCoursesKey(), JSON.stringify([...set])); }
+
+    function hideCourse(courseKey) {
+      const hidden = getHiddenCourses();
+      hidden.add(courseKey);
+      saveHiddenCourses(hidden);
+      loadAssignments();
+    }
+
+    function unhideCourse(courseKey) {
+      const hidden = getHiddenCourses();
+      hidden.delete(courseKey);
+      saveHiddenCourses(hidden);
+      loadAssignments();
+      openSettings();
+    }
 
     function loadCourseNames() {
       return new Promise((resolve) => {
@@ -192,6 +215,21 @@
 
     function openSettings() {
       document.getElementById('settings-overlay').style.display = 'flex';
+      const hidden = getHiddenCourses();
+      const section = document.getElementById('hidden-courses-section');
+      const list = document.getElementById('hidden-courses-list');
+      if (hidden.size === 0) {
+        section.style.display = 'none';
+        return;
+      }
+      section.style.display = 'block';
+      list.innerHTML = [...hidden].map(course => {
+        const name = courseNameMap[course] || course;
+        return `<div class="hidden-course-row">
+          <span>${escHtml(name)}</span>
+          <button class="btn-unhide" onclick="unhideCourse('${escHtml(course)}')">Show</button>
+        </div>`;
+      }).join('');
     }
 
     function closeSettings() {
@@ -368,7 +406,9 @@
       const active = assignments.filter(a => !a.completed);
       const done = assignments.filter(a => a.completed);
 
-      function buildGroups(list) {
+      const hidden = getHiddenCourses();
+
+      function buildGroups(list, showHideBtn) {
         const grouped = {};
         for (const a of list) {
           const key = a.course_name || '—';
@@ -378,8 +418,12 @@
         const sorted = Object.keys(grouped).sort((a, b) => a.localeCompare(b, 'he'));
         let html = '';
         for (const course of sorted) {
+          if (showHideBtn && hidden.has(course)) continue;
           const displayName = courseNameMap[course] || course;
-          html += `<div class="course-section"><div class="course-header">${escHtml(displayName)}</div>`;
+          const hideBtn = showHideBtn
+            ? `<button class="btn-hide-course" onclick="hideCourse('${escHtml(course)}')" title="Hide course">&#10005;</button>`
+            : '';
+          html += `<div class="course-section"><div class="course-header">${escHtml(displayName)}${hideBtn}</div>`;
           for (const a of grouped[course]) html += renderCard(a);
           html += '</div>';
         }
@@ -388,7 +432,7 @@
 
       let html = '<div class="assignment-list">';
       if (active.length) {
-        html += buildGroups(active);
+        html += buildGroups(active, true);
       } else {
         html += `<div class="assignments-placeholder" style="padding:2rem 1rem">
           <div class="placeholder-icon">&#9989;</div>
@@ -401,7 +445,7 @@
           &#9660; ${done.length} הושלמו
         </div>
         <div class="completed-section" style="display:none">
-          ${buildGroups(done)}
+          ${buildGroups(done, false)}
         </div>`;
       }
 
