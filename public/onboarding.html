@@ -5,138 +5,401 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>הגדרה ראשונית — Technion Tracker</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .wizard {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 2rem 1rem 3rem;
+    }
+
+    .wizard-logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .wizard-dots {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 1.5rem;
+      visibility: hidden;
+    }
+
+    .wizard-dots.visible { visibility: visible; }
+
+    .wizard-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background 0.25s, width 0.25s;
+    }
+
+    .wizard-dot.active {
+      background: var(--accent);
+      width: 22px;
+      border-radius: 4px;
+    }
+
+    .slide {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 580px;
+      animation: slideIn 0.28s ease;
+    }
+
+    .slide.active { display: flex; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .slide-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    }
+
+    .slide-step-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 0.6rem;
+    }
+
+    .slide-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.85rem;
+      line-height: 1.35;
+    }
+
+    .slide-desc {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.75;
+      margin-bottom: 1.25rem;
+    }
+
+    .slide-desc strong { color: var(--text); }
+
+    .slide-welcome-icon {
+      font-size: 3.2rem;
+      text-align: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .slide-link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: inherit;
+      margin-bottom: 1.25rem;
+      direction: ltr;
+    }
+
+    .slide-link-btn:hover { background: var(--accent-dark); }
+
+    /* screenshot + annotation */
+    .annotation-wrap {
+      position: relative;
+      width: 100%;
+      margin: 0.75rem 0 1.25rem;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .annotation-wrap img {
+      width: 100%;
+      display: block;
+    }
+
+    .annotation-ring {
+      position: absolute;
+      border: 2.5px solid #ef4444;
+      border-radius: 10px;
+      box-shadow: 0 0 0 3px rgba(239,68,68,0.18);
+      pointer-events: none;
+      animation: ring-pulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes ring-pulse {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(239,68,68,0.18); }
+      50%       { box-shadow: 0 0 0 7px rgba(239,68,68,0.07); }
+    }
+
+    /* nav */
+    .wizard-nav {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .btn-back {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.65rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .btn-back:hover { background: var(--bg); }
+
+    .btn-next {
+      flex: 1;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: inherit;
+    }
+
+    .btn-next:hover { background: var(--accent-dark); }
+    .btn-next:disabled { opacity: 0.55; cursor: not-allowed; }
+  </style>
 </head>
 <body>
 
-  <div class="onboarding-container">
-    <div class="auth-logo">&#128218; Technion Tracker</div>
-    <div class="auth-tagline">ברוכים הבאים! ההגדרה לוקחת פחות מדקה ועושים אותה פעם אחת בלבד.</div>
+<div class="wizard">
 
-    <div class="onboarding-card">
-      <div class="onboarding-title">איך מקבלים את קישור ה-iCal מ-Moodle?</div>
+  <div class="wizard-logo">📚 Technion Tracker</div>
+  <div class="wizard-dots" id="wizard-dots">
+    <div class="wizard-dot" id="dot-0"></div>
+    <div class="wizard-dot" id="dot-1"></div>
+    <div class="wizard-dot" id="dot-2"></div>
+    <div class="wizard-dot" id="dot-3"></div>
+    <div class="wizard-dot" id="dot-4"></div>
+  </div>
 
-      <div class="steps">
-
-        <div class="step">
-          <div class="step-num">1</div>
-          <div class="step-content">
-            <div class="step-title">התחברו ל-Moodle</div>
-            <div class="step-desc">היכנסו ל-<strong>moodle25.technion.ac.il</strong> והתחברו עם פרטי הטכניון שלכם.</div>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-num">2</div>
-          <div class="step-content">
-            <div class="step-title">פתחו את דף הייצוא</div>
-            <div class="step-desc">כשאתם מחוברים, לחצו על הקישור הבא או העתיקו אותו לדפדפן:</div>
-            <a class="onboarding-link" href="https://moodle25.technion.ac.il/calendar/export.php" target="_blank" dir="ltr">
-              https://moodle25.technion.ac.il/calendar/export.php &#8599;
-            </a>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-num">3</div>
-          <div class="step-content">
-            <div class="step-title">מלאו את הטופס</div>
-            <div class="step-desc">
-              תחת <strong>ארועים ליצוא</strong> — בחרו <strong>כל האירועים</strong>.<br>
-              תחת <strong>מסגרת זמן</strong> — בחרו <strong>60 הימים שזה עתה חלפו ו60 הימים הבאים</strong>.
-            </div>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-num">4</div>
-          <div class="step-content">
-            <div class="step-title">לחצו על "הצג את כתובת ה-URL"</div>
-            <div class="step-desc">לחצו על הכפתור הירוק <strong>הצג את כתובת ה-URL של לוח השנה</strong>.</div>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-num">5</div>
-          <div class="step-content">
-            <div class="step-title">העתיקו את הקישור שמופיע</div>
-            <div class="step-desc">העתיקו את הכתובת (מתחילה ב-<strong dir="ltr">https://moodle25...</strong>) והדביקו אותה בשדה למטה.</div>
-          </div>
-        </div>
-
+  <!-- ── Slide 0: Welcome ── -->
+  <div class="slide active" id="slide-0">
+    <div class="slide-card">
+      <div class="slide-welcome-icon">👋</div>
+      <div class="slide-title">ברוכים הבאים!</div>
+      <div class="slide-desc">
+        Technion Tracker עוקב אחרי <strong>כל המטלות שלכם מ-Moodle</strong> ומציג אותן בלוח אחד נקי — עם ספירה לאחור לכל הגשה.<br><br>
+        כדי לסנכרן את המטלות שלכם, אנחנו צריכים את <strong>קישור ה-iCal האישי שלכם מ-Moodle</strong>. זהו קישור פרטי שמכיל את כל אירועי לוח השנה שלכם — כולל מועדי הגשה.<br><br>
+        ההגדרה לוקחת <strong>פחות מדקה</strong> ועושים אותה פעם אחת בלבד.
       </div>
-
-      <div class="onboarding-screenshot-wrap">
-        <img src="moodle-export.png" alt="דף יצוא לוח השנה ב-Moodle" class="onboarding-screenshot">
-      </div>
-
-      <div class="onboarding-form">
-        <div class="form-group">
-          <label for="onboarding-url">קישור ה-iCal שלך</label>
-          <input
-            type="url"
-            id="onboarding-url"
-            placeholder="https://moodle25.technion.ac.il/calendar/export_execute.php?..."
-            dir="ltr"
-          >
-        </div>
-        <div id="onboarding-message" style="display:none" class="message"></div>
-        <button class="btn btn-primary" onclick="completeSetup()">התחל לעקוב &#8594;</button>
+      <div class="wizard-nav">
+        <button class="btn-next" onclick="goTo(1)">בואו נתחיל ←</button>
       </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const { createClient } = supabase;
-    const sb = createClient(
-      'https://rcngaonfuljhtthsvpap.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbmdhb25mdWxqaHR0aHN2cGFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjUyMjMsImV4cCI6MjA5MjUwMTIyM30.5Ig-xpFdKGcK7U_l1jauGb8dSci6atmJoDng2p1A9N0'
+  <!-- ── Slide 1: Login to Moodle ── -->
+  <div class="slide" id="slide-1">
+    <div class="slide-card">
+      <div class="slide-step-label">שלב 1 מתוך 5</div>
+      <div class="slide-title">התחברו ל-Moodle</div>
+      <div class="slide-desc">
+        היכנסו ל-<strong>moodle25.technion.ac.il</strong> והתחברו עם <strong>שם המשתמש והסיסמה של הטכניון</strong> שלכם.
+      </div>
+      <a class="slide-link-btn" href="https://moodle25.technion.ac.il" target="_blank">פתח את Moodle ↗</a>
+      <div class="wizard-nav">
+        <button class="btn-back" onclick="goTo(0)">← חזור</button>
+        <button class="btn-next" onclick="goTo(2)">התחברתי — המשך →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Slide 2: Open export page ── -->
+  <div class="slide" id="slide-2">
+    <div class="slide-card">
+      <div class="slide-step-label">שלב 2 מתוך 5</div>
+      <div class="slide-title">פתחו את דף ייצוא לוח השנה</div>
+      <div class="slide-desc">
+        לחצו על הכפתור למטה כדי לפתוח את <strong>דף ייצוא לוח השנה</strong> ב-Moodle. הדף ייפתח בלשונית חדשה.
+      </div>
+      <a class="slide-link-btn" href="https://moodle25.technion.ac.il/calendar/export.php" target="_blank">פתח דף ייצוא לוח השנה ↗</a>
+      <div class="wizard-nav">
+        <button class="btn-back" onclick="goTo(1)">← חזור</button>
+        <button class="btn-next" onclick="goTo(3)">פתחתי — המשך →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Slide 3: Select כל האירועים ── -->
+  <div class="slide" id="slide-3">
+    <div class="slide-card">
+      <div class="slide-step-label">שלב 3 מתוך 5</div>
+      <div class="slide-title">בחרו "כל האירועים"</div>
+      <div class="slide-desc">
+        תחת <strong>ארועים ליצוא</strong>, בחרו <strong>כל האירועים</strong>.
+      </div>
+      <div class="annotation-wrap">
+        <img src="moodle-export.png" alt="דף ייצוא Moodle">
+        <div class="annotation-ring" style="top:33.5%; right:1.5%; width:44%; height:8%;"></div>
+      </div>
+      <div class="wizard-nav">
+        <button class="btn-back" onclick="goTo(2)">← חזור</button>
+        <button class="btn-next" onclick="goTo(4)">בחרתי — המשך →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Slide 4: Select time range ── -->
+  <div class="slide" id="slide-4">
+    <div class="slide-card">
+      <div class="slide-step-label">שלב 4 מתוך 5</div>
+      <div class="slide-title">בחרו את מסגרת הזמן</div>
+      <div class="slide-desc">
+        תחת <strong>מסגרת זמן</strong>, בחרו <strong>60 הימים שזה עתה חלפו ו60 הימים הבאים</strong>.
+      </div>
+      <div class="annotation-wrap">
+        <img src="moodle-export.png" alt="דף ייצוא Moodle">
+        <div class="annotation-ring" style="top:78%; right:1.5%; width:65%; height:7%;"></div>
+      </div>
+      <div class="wizard-nav">
+        <button class="btn-back" onclick="goTo(3)">← חזור</button>
+        <button class="btn-next" onclick="goTo(5)">בחרתי — המשך →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Slide 5: Click Get URL button ── -->
+  <div class="slide" id="slide-5">
+    <div class="slide-card">
+      <div class="slide-step-label">שלב 5 מתוך 5</div>
+      <div class="slide-title">לחצו על "השג את כתובת ה-URL"</div>
+      <div class="slide-desc">
+        לחצו על הכפתור הירוק <strong>השג את כתובת ה-URL של לוח השנה</strong> והעתיקו את הקישור שמופיע.
+      </div>
+      <div class="annotation-wrap">
+        <img src="moodle-export.png" alt="דף ייצוא Moodle">
+        <div class="annotation-ring" style="top:86.5%; right:11%; width:53%; height:9.5%;"></div>
+      </div>
+      <div class="wizard-nav">
+        <button class="btn-back" onclick="goTo(4)">← חזור</button>
+        <button class="btn-next" onclick="goTo(6)">העתקתי — המשך →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Slide 6: Paste URL ── -->
+  <div class="slide" id="slide-6">
+    <div class="slide-card">
+      <div class="slide-title">הדביקו את הקישור</div>
+      <div class="slide-desc">
+        הדביקו את הקישור שהעתקתם — מתחיל ב-<span dir="ltr">https://moodle25...</span>
+      </div>
+      <div class="form-group">
+        <label for="onboarding-url">קישור ה-iCal שלך</label>
+        <input
+          type="url"
+          id="onboarding-url"
+          placeholder="https://moodle25.technion.ac.il/calendar/export_execute.php?..."
+          dir="ltr"
+        >
+      </div>
+      <div id="onboarding-message" style="display:none" class="message"></div>
+      <div class="wizard-nav">
+        <button class="btn-back" onclick="goTo(5)">← חזור</button>
+        <button class="btn-next" id="submit-btn" onclick="completeSetup()">התחל לעקוב ←</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const { createClient } = supabase;
+  const sb = createClient(
+    'https://rcngaonfuljhtthsvpap.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbmdhb25mdWxqaHR0aHN2cGFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjUyMjMsImV4cCI6MjA5MjUwMTIyM30.5Ig-xpFdKGcK7U_l1jauGb8dSci6atmJoDng2p1A9N0'
+  );
+
+  let current = 0;
+
+  function goTo(n) {
+    document.getElementById('slide-' + current).classList.remove('active');
+    current = n;
+    document.getElementById('slide-' + n).classList.add('active');
+    updateDots();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function updateDots() {
+    const wrap = document.getElementById('wizard-dots');
+    const isStep = current >= 1 && current <= 5;
+    wrap.classList.toggle('visible', isStep);
+    for (let i = 0; i < 5; i++) {
+      document.getElementById('dot-' + i).classList.toggle('active', i === current - 1);
+    }
+  }
+
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'index.html'; return; }
+    const { data } = await sb
+      .from('profiles')
+      .select('moodle_ical_url')
+      .eq('user_id', session.user.id)
+      .single();
+    if (data?.moodle_ical_url) window.location.href = 'dashboard.html';
+  }
+
+  async function completeSetup() {
+    const url = document.getElementById('onboarding-url').value.trim();
+    if (!url) { showMessage('אנא הכניסו את קישור ה-iCal.', 'error'); return; }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'שומר...';
+
+    const { data: { session } } = await sb.auth.getSession();
+    const { error } = await sb.from('profiles').upsert(
+      { user_id: session.user.id, moodle_ical_url: url },
+      { onConflict: 'user_id' }
     );
 
-    async function init() {
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.href = 'index.html'; return; }
-
-      const { data } = await sb
-        .from('profiles')
-        .select('moodle_ical_url')
-        .eq('user_id', session.user.id)
-        .single();
-
-      if (data?.moodle_ical_url) {
-        window.location.href = 'dashboard.html';
-      }
+    if (error) {
+      showMessage('שגיאה בשמירה: ' + error.message, 'error');
+      btn.disabled = false;
+      btn.textContent = 'התחל לעקוב ←';
+    } else {
+      window.location.href = 'dashboard.html';
     }
+  }
 
-    async function completeSetup() {
-      const url = document.getElementById('onboarding-url').value.trim();
-      if (!url) {
-        showMessage('אנא הכניסו את קישור ה-iCal.', 'error');
-        return;
-      }
+  function showMessage(text, type) {
+    const el = document.getElementById('onboarding-message');
+    el.textContent = text;
+    el.className = 'message ' + type;
+    el.style.display = 'block';
+  }
 
-      const { data: { session } } = await sb.auth.getSession();
-      const { error } = await sb.from('profiles').upsert(
-        { user_id: session.user.id, moodle_ical_url: url },
-        { onConflict: 'user_id' }
-      );
-
-      if (error) {
-        showMessage('שגיאה בשמירה: ' + error.message, 'error');
-      } else {
-        window.location.href = 'dashboard.html';
-      }
-    }
-
-    function showMessage(text, type) {
-      const el = document.getElementById('onboarding-message');
-      el.textContent = text;
-      el.className = 'message ' + type;
-      el.style.display = 'block';
-    }
-
-    init();
-  </script>
+  updateDots();
+  init();
+</script>
 
 </body>
 </html>
