@@ -451,8 +451,13 @@
           const hideBtn = showHideBtn
             ? `<button class="btn-hide-course" onclick="hideCourse('${escHtml(course)}')" title="Hide course">&#10005;</button>`
             : '';
+          const sortedItems = grouped[course].slice().sort((a, b) => {
+            if (!a.due_date) return 1;
+            if (!b.due_date) return -1;
+            return new Date(a.due_date) - new Date(b.due_date);
+          });
           html += `<div class="course-section"><div class="course-header">${escHtml(displayName)}${hideBtn}</div>`;
-          for (const a of grouped[course]) html += renderCard(a);
+          for (const a of sortedItems) html += renderCard(a);
           html += '</div>';
         }
         return html;
