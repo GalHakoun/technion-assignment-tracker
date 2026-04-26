@@ -12,30 +12,12 @@
     <div class="navbar-brand">&#128218; Technion Tracker</div>
     <div class="navbar-right">
       <span class="user-email" id="user-email"></span>
+      <button class="btn-settings" onclick="openSettings()" title="Settings">&#9881;&#65039;</button>
       <button class="btn-logout" onclick="logout()">Logout</button>
     </div>
   </nav>
 
   <div class="dashboard-content">
-
-    <!-- Settings -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">&#9881;&#65039; Settings</div>
-      </div>
-      <div id="settings-message" style="display:none" class="message"></div>
-      <div class="settings-row">
-        <div class="form-group">
-          <label for="moodle-url">Moodle iCal URL</label>
-          <input
-            type="url"
-            id="moodle-url"
-            placeholder="https://moodle25.technion.ac.il/calendar/export_execute.php?..."
-          >
-        </div>
-        <button class="btn btn-primary" onclick="saveSettings()">Save</button>
-      </div>
-    </div>
 
     <!-- Assignments -->
     <div class="card">
@@ -67,6 +49,22 @@
       <div class="modal-progress" id="modal-progress"></div>
       <div style="text-align:center;margin-top:0.75rem">
         <button onclick="skipAllUncertain()" style="background:none;border:none;color:var(--text-muted);font-size:0.8rem;cursor:pointer;text-decoration:underline">Skip all remaining</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings modal -->
+  <div class="modal-overlay" id="settings-overlay" style="display:none" onclick="if(event.target===this)closeSettings()">
+    <div class="modal-card">
+      <div class="modal-heading">&#9881;&#65039; Settings</div>
+      <div class="form-group" style="margin-top:1.25rem">
+        <label for="settings-moodle-url">Moodle iCal URL</label>
+        <input type="url" id="settings-moodle-url" placeholder="https://moodle25.technion.ac.il/calendar/export_execute.php?...">
+      </div>
+      <div id="settings-message" style="display:none" class="message"></div>
+      <div class="modal-actions">
+        <button class="btn-yes" onclick="saveSettings()">Save</button>
+        <button class="btn-no" onclick="closeSettings()">Cancel</button>
       </div>
     </div>
   </div>
@@ -114,7 +112,8 @@
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user;
       document.getElementById('user-email').textContent = currentUser.email;
-      await loadProfile();
+      const hasUrl = await loadProfile();
+      if (!hasUrl) { window.location.href = 'onboarding.html'; return; }
       await loadCourseNames();
       await loadAssignments();
     }
@@ -126,12 +125,23 @@
         .eq('user_id', currentUser.id)
         .single();
       if (data?.moodle_ical_url) {
-        document.getElementById('moodle-url').value = data.moodle_ical_url;
+        document.getElementById('settings-moodle-url').value = data.moodle_ical_url;
+        return true;
       }
+      return false;
+    }
+
+    function openSettings() {
+      document.getElementById('settings-overlay').style.display = 'flex';
+    }
+
+    function closeSettings() {
+      document.getElementById('settings-overlay').style.display = 'none';
+      showSettingsMessage('', '');
     }
 
     async function saveSettings() {
-      const url = document.getElementById('moodle-url').value.trim();
+      const url = document.getElementById('settings-moodle-url').value.trim();
       showSettingsMessage('', '');
       const { error } = await sb.from('profiles').upsert(
         { user_id: currentUser.id, moodle_ical_url: url },
@@ -140,8 +150,8 @@
       if (error) {
         showSettingsMessage('Failed to save: ' + error.message, 'error');
       } else {
-        showSettingsMessage('Settings saved!', 'success');
-        setTimeout(() => showSettingsMessage('', ''), 3000);
+        showSettingsMessage('Saved!', 'success');
+        setTimeout(() => closeSettings(), 1500);
       }
     }
 

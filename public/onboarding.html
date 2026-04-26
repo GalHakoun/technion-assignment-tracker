@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>הגדרה ראשונית — Technion Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="onboarding-container">
+    <div class="auth-logo">&#128218; Technion Tracker</div>
+    <div class="auth-tagline">ברוך הבא! בצע הגדרה חד-פעמית כדי להתחיל לעקוב אחרי המטלות שלך.</div>
+
+    <div class="onboarding-card">
+      <div class="onboarding-title">איך מקבלים את קישור ה-iCal מ-Moodle?</div>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">היכנסו ל-Moodle</div>
+            <div class="step-desc">פתחו את <strong>moodle25.technion.ac.il</strong> והיכנסו עם פרטי הטכניון שלכם.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">לחצו על "לוח שנה"</div>
+            <div class="step-desc">בתפריט הניווט העליון או הצדדי, לחצו על <strong>לוח שנה (Calendar)</strong>.</div>
+            <div class="screenshot-placeholder">הוסף תמונה כאן</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">לחצו על "ייצוא לוח שנה"</div>
+            <div class="step-desc">גללו מטה בדף לוח השנה ולחצו על <strong>ייצוא לוח שנה (Export calendar)</strong>.</div>
+            <div class="screenshot-placeholder">הוסף תמונה כאן</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">קבלת הקישור</div>
+            <div class="step-desc">בדף הייצוא, בחרו <strong>כל האירועים</strong> ולחצו על <strong>קבל כתובת URL של לוח השנה</strong>.</div>
+            <div class="screenshot-placeholder">הוסף תמונה כאן</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <div class="step-title">העתיקו את הקישור</div>
+            <div class="step-desc">העתיקו את הכתובת שמופיעה (מתחילה ב-<strong>https://moodle25...</strong>) והדביקו אותה למטה.</div>
+            <div class="screenshot-placeholder">הוסף תמונה כאן</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="onboarding-form">
+        <div class="form-group">
+          <label for="onboarding-url">קישור ה-iCal שלך</label>
+          <input
+            type="url"
+            id="onboarding-url"
+            placeholder="https://moodle25.technion.ac.il/calendar/export_execute.php?..."
+            dir="ltr"
+          >
+        </div>
+        <div id="onboarding-message" style="display:none" class="message"></div>
+        <button class="btn btn-primary" onclick="completeSetup()">התחל לעקוב &#8594;</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const { createClient } = supabase;
+    const sb = createClient(
+      'https://rcngaonfuljhtthsvpap.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbmdhb25mdWxqaHR0aHN2cGFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjUyMjMsImV4cCI6MjA5MjUwMTIyM30.5Ig-xpFdKGcK7U_l1jauGb8dSci6atmJoDng2p1A9N0'
+    );
+
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+
+      const { data } = await sb
+        .from('profiles')
+        .select('moodle_ical_url')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (data?.moodle_ical_url) {
+        window.location.href = 'dashboard.html';
+      }
+    }
+
+    async function completeSetup() {
+      const url = document.getElementById('onboarding-url').value.trim();
+      if (!url) {
+        showMessage('אנא הכניסו את קישור ה-iCal.', 'error');
+        return;
+      }
+
+      const { data: { session } } = await sb.auth.getSession();
+      const { error } = await sb.from('profiles').upsert(
+        { user_id: session.user.id, moodle_ical_url: url },
+        { onConflict: 'user_id' }
+      );
+
+      if (error) {
+        showMessage('שגיאה בשמירה: ' + error.message, 'error');
+      } else {
+        window.location.href = 'dashboard.html';
+      }
+    }
+
+    function showMessage(text, type) {
+      const el = document.getElementById('onboarding-message');
+      el.textContent = text;
+      el.className = 'message ' + type;
+      el.style.display = 'block';
+    }
+
+    init();
+  </script>
+
+</body>
+</html>
