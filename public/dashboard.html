@@ -23,7 +23,10 @@
     <div class="card">
       <div class="card-header">
         <div class="card-title">&#128203; Your Assignments</div>
-        <button class="btn-sync" id="sync-btn" onclick="syncNow()">Sync Now</button>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn-add" onclick="openAddModal()" title="Add assignment">&#43;</button>
+          <button class="btn-sync" id="sync-btn" onclick="syncNow()">Sync Now</button>
+        </div>
       </div>
       <div id="sync-message" style="display:none" class="message"></div>
       <div id="assignments-container">
@@ -34,6 +37,31 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- Add assignment modal -->
+  <div class="modal-overlay" id="add-overlay" style="display:none" onclick="if(event.target===this)closeAddModal()">
+    <div class="modal-card">
+      <div class="modal-heading">&#43; Add Assignment</div>
+      <div class="form-group" style="margin-top:1.25rem">
+        <label for="add-title">Title</label>
+        <input type="text" id="add-title" placeholder="e.g. HW3">
+      </div>
+      <div class="form-group">
+        <label for="add-course">Course</label>
+        <input type="text" id="add-course" placeholder="e.g. Algorithms" list="course-suggestions">
+        <datalist id="course-suggestions"></datalist>
+      </div>
+      <div class="form-group">
+        <label for="add-due">Due Date</label>
+        <input type="datetime-local" id="add-due">
+      </div>
+      <div id="add-message" style="display:none" class="message"></div>
+      <div class="modal-actions">
+        <button class="btn-yes" onclick="submitAdd()">Add</button>
+        <button class="btn-no" onclick="closeAddModal()">Cancel</button>
+      </div>
+    </div>
   </div>
 
   <!-- Uncertain classification popup -->
@@ -514,6 +542,73 @@
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+    }
+
+    // ── Manual assignment entry ──
+
+    function openAddModal() {
+      document.getElementById('add-title').value = '';
+      document.getElementById('add-course').value = '';
+      document.getElementById('add-due').value = '';
+      document.getElementById('add-message').style.display = 'none';
+
+      // Populate course suggestions from existing assignments
+      const { data } = { data: null }; // populated below
+      const existing = document.querySelectorAll('.course-header');
+      const datalist = document.getElementById('course-suggestions');
+      datalist.innerHTML = '';
+      const seen = new Set();
+      existing.forEach(el => {
+        const name = el.textContent.trim().replace('×', '').trim();
+        if (name && !seen.has(name)) {
+          seen.add(name);
+          const opt = document.createElement('option');
+          opt.value = name;
+          datalist.appendChild(opt);
+        }
+      });
+
+      document.getElementById('add-overlay').style.display = 'flex';
+      setTimeout(() => document.getElementById('add-title').focus(), 50);
+    }
+
+    function closeAddModal() {
+      document.getElementById('add-overlay').style.display = 'none';
+    }
+
+    async function submitAdd() {
+      const title = document.getElementById('add-title').value.trim();
+      const course = document.getElementById('add-course').value.trim();
+      const due = document.getElementById('add-due').value;
+
+      if (!title) {
+        const el = document.getElementById('add-message');
+        el.textContent = 'Please enter a title.';
+        el.className = 'message error';
+        el.style.display = 'block';
+        return;
+      }
+
+      // Resolve display course name back to course key if possible
+      const courseKey = Object.entries(courseNameMap).find(([, name]) => name === course)?.[0] || course || null;
+
+      const { error } = await sb.from('assignments').insert({
+        user_id: currentUser.id,
+        title,
+        course_name: courseKey,
+        due_date: due ? new Date(due).toISOString() : null,
+      });
+
+      if (error) {
+        const el = document.getElementById('add-message');
+        el.textContent = 'Failed to save: ' + error.message;
+        el.className = 'message error';
+        el.style.display = 'block';
+        return;
+      }
+
+      closeAddModal();
+      await loadAssignments();
     }
 
     async function logout() {
