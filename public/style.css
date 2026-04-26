@@ -575,17 +575,29 @@ input:focus {
   line-height: 1.5;
 }
 
-.screenshot-placeholder {
-  margin-top: 0.75rem;
-  border: 2px dashed var(--border);
-  border-radius: 8px;
-  height: 150px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--border);
+.onboarding-screenshot-wrap {
+  margin: 1.5rem 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.onboarding-screenshot {
+  width: 100%;
+  display: block;
+}
+
+.onboarding-link {
+  display: inline-block;
+  margin-top: 0.5rem;
   font-size: 0.8rem;
-  background: var(--bg);
+  color: var(--accent);
+  word-break: break-all;
+  text-decoration: none;
+}
+
+.onboarding-link:hover {
+  text-decoration: underline;
 }
 
 .onboarding-form {
