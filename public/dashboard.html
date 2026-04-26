@@ -21,7 +21,7 @@
     <!-- Assignments -->
     <div class="card">
       <div class="card-header">
-        <div class="card-title">&#128203; המטלות שלך <span class="task-count" id="nav-badge" style="display:none"><span id="nav-badge-count"></span> משימות</span></div>
+        <div class="card-title">&#128203; המטלות שלך <span class="task-count" id="nav-badge" style="display:none"></span></div>
         <div style="display:flex;gap:0.5rem">
           <button class="btn-add" onclick="openAddModal()" title="הוספת מטלה">&#43;</button>
           <button class="btn-sync" id="sync-btn" onclick="syncNow()">סנכרן</button>
@@ -492,7 +492,7 @@
       const upcoming = active.filter(a => a.due_date && new Date(a.due_date) >= now2);
       const badge = document.getElementById('nav-badge');
       if (upcoming.length > 0) {
-        document.getElementById('nav-badge-count').textContent = upcoming.length;
+        badge.textContent = upcoming.length + ' משימות';
         badge.style.display = 'inline-flex';
       } else {
         badge.style.display = 'none';
