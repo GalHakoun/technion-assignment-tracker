@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="he">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +13,7 @@
     <div class="navbar-right">
       <span class="user-email" id="user-email"></span>
       <button class="btn-settings" onclick="openSettings()" title="Settings">&#9881;&#65039;</button>
-      <button class="btn-logout" onclick="logout()">Logout</button>
+      <button class="btn-logout" onclick="logout()">התנתק</button>
     </div>
   </nav>
 
@@ -22,17 +22,17 @@
     <!-- Assignments -->
     <div class="card">
       <div class="card-header">
-        <div class="card-title">&#128203; Your Assignments</div>
+        <div class="card-title">&#128203; המטלות שלך</div>
         <div style="display:flex;gap:0.5rem">
-          <button class="btn-add" onclick="openAddModal()" title="Add assignment">&#43;</button>
-          <button class="btn-sync" id="sync-btn" onclick="syncNow()">Sync Now</button>
+          <button class="btn-add" onclick="openAddModal()" title="הוספת מטלה">&#43;</button>
+          <button class="btn-sync" id="sync-btn" onclick="syncNow()">סנכרן</button>
         </div>
       </div>
       <div id="sync-message" style="display:none" class="message"></div>
       <div id="assignments-container">
         <div class="assignments-placeholder">
           <div class="placeholder-icon">&#128193;</div>
-          <p>Your assignments will appear here after you sync.</p>
+          <p>המטלות שלך יופיעו כאן לאחר סנכרון.</p>
         </div>
       </div>
     </div>
@@ -42,24 +42,24 @@
   <!-- Add assignment modal -->
   <div class="modal-overlay" id="add-overlay" style="display:none" onclick="if(event.target===this)closeAddModal()">
     <div class="modal-card">
-      <div class="modal-heading">&#43; Add Assignment</div>
+      <div class="modal-heading">&#43; הוספת מטלה</div>
       <div class="form-group" style="margin-top:1.25rem">
-        <label for="add-title">Title</label>
-        <input type="text" id="add-title" placeholder="e.g. HW3">
+        <label for="add-title">כותרת</label>
+        <input type="text" id="add-title" placeholder="לדוגמה: תרגיל 3">
       </div>
       <div class="form-group">
-        <label for="add-course">Course</label>
-        <input type="text" id="add-course" placeholder="e.g. Algorithms" list="course-suggestions">
+        <label for="add-course">קורס</label>
+        <input type="text" id="add-course" placeholder="לדוגמה: אלגוריתמים" list="course-suggestions">
         <datalist id="course-suggestions"></datalist>
       </div>
       <div class="form-group">
-        <label for="add-due">Due Date</label>
+        <label for="add-due">תאריך הגשה</label>
         <input type="datetime-local" id="add-due">
       </div>
       <div id="add-message" style="display:none" class="message"></div>
       <div class="modal-actions">
-        <button class="btn-yes" onclick="submitAdd()">Add</button>
-        <button class="btn-no" onclick="closeAddModal()">Cancel</button>
+        <button class="btn-yes" onclick="submitAdd()">הוסף</button>
+        <button class="btn-no" onclick="closeAddModal()">ביטול</button>
       </div>
     </div>
   </div>
@@ -67,16 +67,16 @@
   <!-- Uncertain classification popup -->
   <div class="modal-overlay" id="modal-overlay" style="display:none">
     <div class="modal-card">
-      <div class="modal-heading">Is this a homework assignment?</div>
-      <div class="modal-sub">Help us learn what to track for you.</div>
+      <div class="modal-heading">האם זוהי מטלת בית?</div>
+      <div class="modal-sub">עזרו לנו ללמוד מה לעקוב עבורכם.</div>
       <div class="modal-event-title" id="modal-event-title"></div>
       <div class="modal-actions">
-        <button class="btn-yes" onclick="answerUncertain(true)">&#9989; Yes, homework</button>
-        <button class="btn-no" onclick="answerUncertain(false)">&#10060; Not homework</button>
+        <button class="btn-yes" onclick="answerUncertain(true)">&#9989; כן, מטלה</button>
+        <button class="btn-no" onclick="answerUncertain(false)">&#10060; לא מטלה</button>
       </div>
       <div class="modal-progress" id="modal-progress"></div>
       <div style="text-align:center;margin-top:0.75rem">
-        <button onclick="skipAllUncertain()" style="background:none;border:none;color:var(--text-muted);font-size:0.8rem;cursor:pointer;text-decoration:underline">Skip all remaining</button>
+        <button onclick="skipAllUncertain()" style="background:none;border:none;color:var(--text-muted);font-size:0.8rem;cursor:pointer;text-decoration:underline">דלג על כולם</button>
       </div>
     </div>
   </div>
@@ -102,22 +102,22 @@
   <!-- Settings modal -->
   <div class="modal-overlay" id="settings-overlay" style="display:none" onclick="if(event.target===this)closeSettings()">
     <div class="modal-card">
-      <div class="modal-heading">&#9881;&#65039; Settings</div>
+      <div class="modal-heading">&#9881;&#65039; הגדרות</div>
       <div class="form-group" style="margin-top:1.25rem">
-        <label for="settings-moodle-url">Moodle iCal URL</label>
+        <label for="settings-moodle-url">קישור Moodle iCal</label>
         <input type="url" id="settings-moodle-url" placeholder="https://moodle25.technion.ac.il/calendar/export_execute.php?...">
       </div>
       <div id="settings-message" style="display:none" class="message"></div>
       <div class="modal-actions">
-        <button class="btn-yes" onclick="saveSettings()">Save</button>
-        <button class="btn-no" onclick="closeSettings()">Cancel</button>
+        <button class="btn-yes" onclick="saveSettings()">שמור</button>
+        <button class="btn-no" onclick="closeSettings()">ביטול</button>
       </div>
       <div style="margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1.25rem;display:flex;align-items:center;justify-content:space-between">
-        <span style="font-size:0.875rem;font-weight:600">Dark Mode</span>
+        <span style="font-size:0.875rem;font-weight:600">מצב לילה</span>
         <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()"></button>
       </div>
       <div id="hidden-courses-section" style="display:none;margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1.25rem">
-        <div style="font-size:0.875rem;font-weight:600;margin-bottom:0.75rem">Hidden Courses</div>
+        <div style="font-size:0.875rem;font-weight:600;margin-bottom:0.75rem">קורסים מוסתרים</div>
         <div id="hidden-courses-list"></div>
       </div>
     </div>
@@ -262,7 +262,7 @@
         const name = courseNameMap[course] || course;
         return `<div class="hidden-course-row">
           <span>${escHtml(name)}</span>
-          <button class="btn-unhide" onclick="unhideCourse('${escHtml(course)}')">Show</button>
+          <button class="btn-unhide" onclick="unhideCourse('${escHtml(course)}')">הצג</button>
         </div>`;
       }).join('');
     }
@@ -280,9 +280,9 @@
         { onConflict: 'user_id' }
       );
       if (error) {
-        showSettingsMessage('Failed to save: ' + error.message, 'error');
+        showSettingsMessage('שגיאה בשמירה: ' + error.message, 'error');
       } else {
-        showSettingsMessage('Saved!', 'success');
+        showSettingsMessage('נשמר!', 'success');
         setTimeout(() => closeSettings(), 1500);
       }
     }
@@ -300,7 +300,7 @@
     async function syncNow() {
       const btn = document.getElementById('sync-btn');
       btn.disabled = true;
-      btn.textContent = 'Fetching...';
+      btn.textContent = 'מוריד נתונים...';
       showSyncMessage('', '');
 
       const { data: { session } } = await sb.auth.getSession();
@@ -314,14 +314,14 @@
       const fetchJson = await fetchRes.json();
 
       if (!fetchRes.ok) {
-        showSyncMessage(fetchJson.error || 'Sync failed.', 'error');
+        showSyncMessage(fetchJson.error || 'הסנכרון נכשל.', 'error');
         btn.disabled = false;
-        btn.textContent = 'Sync Now';
+        btn.textContent = 'סנכרן';
         return;
       }
 
       // Step 2: classify
-      btn.textContent = 'Classifying...';
+      btn.textContent = 'מסווג...';
       const classifyRes = await fetch('/api/classify', {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + token },
@@ -329,15 +329,15 @@
       const classifyJson = await classifyRes.json();
 
       btn.disabled = false;
-      btn.textContent = 'Sync Now';
+      btn.textContent = 'סנכרן';
 
       if (!classifyRes.ok) {
-        showSyncMessage(classifyJson.error || 'Classification failed.', 'error');
+        showSyncMessage(classifyJson.error || 'הסיווג נכשל.', 'error');
         return;
       }
 
-      const msg = `Synced ${fetchJson.count} events · Found ${classifyJson.homework_added} new assignments` +
-        (classifyJson.uncertain_count > 0 ? ` · ${classifyJson.uncertain_count} need your input` : '');
+      const msg = `סונכרנו ${fetchJson.count} אירועים · נמצאו ${classifyJson.homework_added} מטלות חדשות` +
+        (classifyJson.uncertain_count > 0 ? ` · ${classifyJson.uncertain_count} דורשות אישור` : '');
       showSyncMessage(msg, 'success');
 
       // Step 3: show uncertain popup if needed, then load assignments
@@ -371,9 +371,9 @@
         return;
       }
       const event = uncertainQueue[uncertainIndex];
-      document.getElementById('modal-event-title').textContent = event.title || '(no title)';
+      document.getElementById('modal-event-title').textContent = event.title || '(ללא כותרת)';
       document.getElementById('modal-progress').textContent =
-        `${uncertainIndex + 1} of ${uncertainQueue.length}`;
+        `${uncertainIndex + 1} מתוך ${uncertainQueue.length}`;
       document.getElementById('modal-overlay').style.display = 'flex';
     }
 
@@ -433,7 +433,7 @@
         container.innerHTML = `
           <div class="assignments-placeholder">
             <div class="placeholder-icon">&#128193;</div>
-            <p>Your assignments will appear here after you sync.</p>
+            <p>המטלות שלך יופיעו כאן לאחר סנכרון.</p>
           </div>`;
         return;
       }
@@ -467,7 +467,7 @@
           if (showHideBtn && hidden.has(course)) continue;
           const displayName = courseNameMap[course] || course;
           const hideBtn = showHideBtn
-            ? `<button class="btn-hide-course" onclick="hideCourse('${escHtml(course)}')" title="Hide course">&#10005;</button>`
+            ? `<button class="btn-hide-course" onclick="hideCourse('${escHtml(course)}')" title="הסתר קורס">&#10005;</button>`
             : '';
           const sortedItems = grouped[course].slice().sort((a, b) => {
             if (!a.due_date) return 1;
@@ -528,28 +528,28 @@
         const days = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
         if (days < 0) {
           urgency = 'overdue';
-          countdown = `Overdue by ${Math.abs(days)}d`;
+          countdown = `באיחור של ${Math.abs(days)} ימים`;
         } else if (days <= 3) {
           urgency = 'soon';
-          countdown = days === 0 ? 'Due today!' : `${days}d left`;
+          countdown = days === 0 ? 'להגשה היום!' : `${days} ימים נותרו`;
         } else {
           urgency = 'ok';
-          countdown = `${days}d left`;
+          countdown = `${days} ימים נותרו`;
         }
       }
 
       const dueFmt = due
-        ? due.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+        ? due.toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' })
         : '—';
 
       const completedClass = a.completed ? 'completed' : '';
       const deleteBtn = !a.raw_event_id
-        ? `<button class="btn-delete" onclick="deleteAssignment('${a.id}')" title="Delete">&#128465;</button>`
+        ? `<button class="btn-delete" onclick="deleteAssignment('${a.id}')" title="מחק">&#128465;</button>`
         : '';
 
       return `
         <div class="assignment-card ${urgency} ${completedClass}">
-          <button class="btn-complete" onclick="toggleComplete('${a.id}', ${a.completed})" title="${a.completed ? 'Mark incomplete' : 'Mark done'}">
+          <button class="btn-complete" onclick="toggleComplete('${a.id}', ${a.completed})" title="${a.completed ? 'בטל סימון' : 'סמן כהושלם'}">
             ${a.completed ? '&#9989;' : '&#9711;'}
           </button>
           <div class="assignment-info">
@@ -574,7 +574,7 @@
     // ── Delete assignment ──
 
     async function deleteAssignment(id) {
-      if (!confirm('Delete this assignment?')) return;
+      if (!confirm('למחוק את המטלה?')) return;
       await sb.from('assignments').delete().eq('id', id).eq('user_id', currentUser.id);
       await loadAssignments();
     }
@@ -642,7 +642,7 @@
 
       if (!title) {
         const el = document.getElementById('add-message');
-        el.textContent = 'Please enter a title.';
+        el.textContent = 'אנא הכניסו כותרת.';
         el.className = 'message error';
         el.style.display = 'block';
         return;
@@ -660,7 +660,7 @@
 
       if (error) {
         const el = document.getElementById('add-message');
-        el.textContent = 'Failed to save: ' + error.message;
+        el.textContent = 'שגיאה בשמירה: ' + error.message;
         el.className = 'message error';
         el.style.display = 'block';
         return;

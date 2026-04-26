@@ -1,35 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="he">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Technion Assignment Tracker</title>
+  <title>Technion Tracker</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <div class="auth-container">
     <div class="auth-logo">&#128218; Technion Tracker</div>
-    <p class="auth-tagline">Track all your Moodle assignments in one place</p>
+    <p class="auth-tagline">עקוב אחרי כל המטלות שלך ממקום אחד</p>
 
     <div class="auth-card">
       <div class="tabs">
-        <div class="tab active" id="tab-login" onclick="switchTab('login')">Login</div>
-        <div class="tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</div>
+        <div class="tab active" id="tab-login" onclick="switchTab('login')">התחברות</div>
+        <div class="tab" id="tab-signup" onclick="switchTab('signup')">הרשמה</div>
       </div>
 
       <div id="message" style="display:none" class="message"></div>
 
       <form id="auth-form" onsubmit="handleSubmit(event)">
         <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" placeholder="your@email.com" required autocomplete="email">
+          <label for="email">אימייל</label>
+          <input type="email" id="email" placeholder="your@email.com" required autocomplete="email" dir="ltr">
         </div>
         <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" placeholder="Password" required minlength="6" autocomplete="current-password">
+          <label for="password">סיסמה</label>
+          <input type="password" id="password" placeholder="סיסמה" required minlength="6" autocomplete="current-password">
         </div>
-        <button type="submit" class="btn btn-primary" id="submit-btn">Login</button>
+        <button type="submit" class="btn btn-primary" id="submit-btn">התחבר</button>
       </form>
     </div>
   </div>
@@ -44,7 +44,6 @@
 
     let currentTab = 'login';
 
-    // Redirect to dashboard if already logged in
     sb.auth.getSession().then(({ data: { session } }) => {
       if (session) window.location.href = 'dashboard.html';
     });
@@ -53,7 +52,7 @@
       currentTab = tab;
       document.getElementById('tab-login').classList.toggle('active', tab === 'login');
       document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
-      document.getElementById('submit-btn').textContent = tab === 'login' ? 'Login' : 'Create Account';
+      document.getElementById('submit-btn').textContent = tab === 'login' ? 'התחבר' : 'צור חשבון';
       document.getElementById('password').autocomplete = tab === 'login' ? 'current-password' : 'new-password';
       hideMessage();
     }
@@ -76,7 +75,7 @@
       const btn = document.getElementById('submit-btn');
 
       btn.disabled = true;
-      btn.textContent = currentTab === 'login' ? 'Logging in...' : 'Creating account...';
+      btn.textContent = currentTab === 'login' ? 'מתחבר...' : 'יוצר חשבון...';
       hideMessage();
 
       if (currentTab === 'login') {
@@ -84,7 +83,7 @@
         if (error) {
           showMessage(error.message, 'error');
           btn.disabled = false;
-          btn.textContent = 'Login';
+          btn.textContent = 'התחבר';
         } else {
           window.location.href = 'dashboard.html';
         }
@@ -93,11 +92,11 @@
         if (error) {
           showMessage(error.message, 'error');
           btn.disabled = false;
-          btn.textContent = 'Create Account';
+          btn.textContent = 'צור חשבון';
         } else {
-          showMessage('Account created! Check your email to confirm your address, then log in.', 'success');
+          showMessage('החשבון נוצר בהצלחה! התחברו עם הפרטים שלכם.', 'success');
           btn.disabled = false;
-          btn.textContent = 'Create Account';
+          btn.textContent = 'צור חשבון';
         }
       }
     }
