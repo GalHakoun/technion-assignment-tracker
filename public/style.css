@@ -695,7 +695,7 @@ input:focus {
   height: 26px;
   border-radius: 13px;
   padding: 0 0.7rem;
-  margin-inline-start: 0.75rem;
+  margin-inline-end: 0.75rem;
   vertical-align: middle;
   white-space: nowrap;
 }
