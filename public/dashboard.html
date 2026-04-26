@@ -82,6 +82,32 @@
     let currentUser = null;
     let uncertainQueue = [];
     let uncertainIndex = 0;
+    let courseNameMap = {};
+
+    function loadCourseNames() {
+      return new Promise((resolve) => {
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const year = now.getFullYear();
+        // CheeseFork uses the year the academic year started (fall year)
+        const fileYear = month >= 9 ? year : year - 1;
+        const sapSemester = month >= 9 ? 200 : 201;
+        const script = document.createElement('script');
+        script.src = `https://sap.cheesefork.cf/courses_${fileYear}_${sapSemester}.min.js`;
+        script.onload = () => {
+          if (window.courses_from_rishum) {
+            for (const c of window.courses_from_rishum) {
+              const num = c.general?.['מספר מקצוע'];
+              const name = c.general?.['שם מקצוע'];
+              if (num && name) courseNameMap[num] = name;
+            }
+          }
+          resolve();
+        };
+        script.onerror = () => resolve();
+        document.head.appendChild(script);
+      });
+    }
 
     async function init() {
       const { data: { session } } = await sb.auth.getSession();
@@ -89,6 +115,7 @@
       currentUser = session.user;
       document.getElementById('user-email').textContent = currentUser.email;
       await loadProfile();
+      await loadCourseNames();
       await loadAssignments();
     }
 
@@ -269,7 +296,7 @@
         return;
       }
 
-      // Group by course_name
+      // Group by course_name, resolve number to display name
       const grouped = {};
       for (const a of assignments) {
         const key = a.course_name || '—';
@@ -281,8 +308,9 @@
 
       let html = '<div class="assignment-list">';
       for (const course of sortedCourses) {
+        const displayName = courseNameMap[course] || course;
         html += `<div class="course-section">
-          <div class="course-header">${escHtml(course)}</div>`;
+          <div class="course-header">${escHtml(displayName)}</div>`;
         for (const a of grouped[course]) {
           html += renderCard(a);
         }
