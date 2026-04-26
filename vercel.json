@@ -1,10 +1,4 @@
 {
   "version": 2,
-  "outputDirectory": "public",
-  "crons": [
-    {
-      "path": "/api/notify",
-      "schedule": "0 5 * * *"
-    }
-  ]
+  "outputDirectory": "public"
 }

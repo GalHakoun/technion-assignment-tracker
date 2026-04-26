@@ -53,6 +53,24 @@
     </div>
   </div>
 
+  <!-- Morning summary popup -->
+  <div class="modal-overlay" id="morning-overlay" style="display:none">
+    <div class="modal-card morning-card">
+      <div class="morning-greeting">בוקר טוב! &#127749;</div>
+      <div class="morning-tiles">
+        <div class="morning-tile">
+          <div class="morning-tile-num" id="morning-upcoming">—</div>
+          <div class="morning-tile-label">מטלות ב-7 ימים הקרובים</div>
+        </div>
+        <div class="morning-tile morning-tile-new" id="morning-new-tile">
+          <div class="morning-tile-num" id="morning-new">—</div>
+          <div class="morning-tile-label">מטלות חדשות מאז אתמול</div>
+        </div>
+      </div>
+      <button class="btn-yes" style="width:100%;margin-top:1.25rem" onclick="closeMorning()">בואו נתחיל &#8594;</button>
+    </div>
+  </div>
+
   <!-- Settings modal -->
   <div class="modal-overlay" id="settings-overlay" style="display:none" onclick="if(event.target===this)closeSettings()">
     <div class="modal-card">
@@ -116,6 +134,47 @@
       if (!hasUrl) { window.location.href = 'onboarding.html'; return; }
       await loadCourseNames();
       await loadAssignments();
+      await maybeShowMorning();
+    }
+
+    async function maybeShowMorning() {
+      const todayKey = new Date().toISOString().slice(0, 10);
+      const seenKey = `morning_seen_${currentUser.id}`;
+      const lastSeen = localStorage.getItem(seenKey);
+      if (lastSeen === todayKey) return;
+
+      const lastSeenDate = lastSeen ? new Date(lastSeen + 'T00:00:00') : new Date(0);
+      const now = new Date();
+      const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+      const [{ data: upcoming }, { data: newOnes }] = await Promise.all([
+        sb.from('assignments')
+          .select('id')
+          .eq('user_id', currentUser.id)
+          .gte('due_date', now.toISOString())
+          .lte('due_date', in7days.toISOString()),
+        sb.from('assignments')
+          .select('id')
+          .eq('user_id', currentUser.id)
+          .gt('created_at', lastSeenDate.toISOString()),
+      ]);
+
+      const upcomingCount = upcoming?.length || 0;
+      const newCount = newOnes?.length || 0;
+
+      document.getElementById('morning-upcoming').textContent = upcomingCount;
+      document.getElementById('morning-new').textContent = newCount;
+
+      const newTile = document.getElementById('morning-new-tile');
+      if (newCount > 0) newTile.classList.add('has-new');
+
+      document.getElementById('morning-overlay').style.display = 'flex';
+    }
+
+    function closeMorning() {
+      document.getElementById('morning-overlay').style.display = 'none';
+      const todayKey = new Date().toISOString().slice(0, 10);
+      localStorage.setItem(`morning_seen_${currentUser.id}`, todayKey);
     }
 
     async function loadProfile() {
