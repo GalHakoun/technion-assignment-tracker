@@ -29,6 +29,22 @@
           <button class="btn-sync" id="sync-btn" onclick="syncNow()">סנכרן</button>
         </div>
       </div>
+      <div class="filter-bar" id="filter-bar" style="display:none">
+        <div class="filter-group">
+          <label class="filter-label">מיין</label>
+          <select class="filter-select" id="sort-select" onchange="currentSort=this.value;renderAssignments(lastAssignments)">
+            <option value="date">לפי תאריך</option>
+            <option value="course">לפי קורס</option>
+            <option value="status">לפי סטטוס</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">קורס</label>
+          <select class="filter-select" id="course-filter-select" onchange="currentCourseFilter=this.value;renderAssignments(lastAssignments)">
+            <option value="">כל הקורסים</option>
+          </select>
+        </div>
+      </div>
       <div id="sync-message" style="display:none" class="message"></div>
       <div id="assignments-container">
         <div class="assignments-placeholder">
@@ -136,6 +152,9 @@
     let uncertainQueue = [];
     let uncertainIndex = 0;
     let courseNameMap = {};
+    let lastAssignments = [];
+    let currentSort = 'date';
+    let currentCourseFilter = '';
 
     function hiddenCoursesKey() { return `hidden_courses_${currentUser.id}`; }
     function getHiddenCourses() { return new Set(JSON.parse(localStorage.getItem(hiddenCoursesKey()) || '[]')); }
@@ -425,12 +444,34 @@
         .eq('user_id', currentUser.id)
         .order('due_date', { ascending: true });
 
-      renderAssignments(error ? [] : (data || []));
+      lastAssignments = error ? [] : (data || []);
+      renderAssignments(lastAssignments);
+    }
+
+    function populateCourseDropdown(assignments) {
+      const sel = document.getElementById('course-filter-select');
+      const hidden = getHiddenCourses();
+      const courses = [...new Set(assignments.map(a => a.course_name || '—'))]
+        .filter(c => !hidden.has(c))
+        .sort((a, b) => (courseNameMap[a] || a).localeCompare(courseNameMap[b] || b, 'he'));
+      const prev = sel.value;
+      sel.innerHTML = '<option value="">כל הקורסים</option>';
+      for (const c of courses) {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = courseNameMap[c] || c;
+        sel.appendChild(opt);
+      }
+      if (courses.includes(prev)) sel.value = prev;
+      else currentCourseFilter = '';
     }
 
     function renderAssignments(assignments) {
       const container = document.getElementById('assignments-container');
+      const filterBar = document.getElementById('filter-bar');
+
       if (!assignments.length) {
+        filterBar.style.display = 'none';
         container.innerHTML = `
           <div class="assignments-placeholder">
             <div class="placeholder-icon">&#128193;</div>
@@ -439,8 +480,15 @@
         return;
       }
 
-      const active = assignments.filter(a => !a.completed);
-      const done = assignments.filter(a => a.completed);
+      filterBar.style.display = 'flex';
+      populateCourseDropdown(assignments);
+
+      const visible = currentCourseFilter
+        ? assignments.filter(a => (a.course_name || '—') === currentCourseFilter)
+        : assignments;
+
+      const active = visible.filter(a => !a.completed);
+      const done = visible.filter(a => a.completed);
 
       // Update navbar badge with upcoming non-completed count
       const now2 = new Date();
@@ -462,7 +510,25 @@
           if (!grouped[key]) grouped[key] = [];
           grouped[key].push(a);
         }
-        const sorted = Object.keys(grouped).sort((a, b) => a.localeCompare(b, 'he'));
+        const now = new Date();
+        let sorted;
+        if (currentSort === 'course') {
+          sorted = Object.keys(grouped).sort((a, b) =>
+            (courseNameMap[a] || a).localeCompare(courseNameMap[b] || b, 'he'));
+        } else if (currentSort === 'status') {
+          const urgencyOf = items => {
+            if (items.some(i => !i.completed && i.due_date && new Date(i.due_date) < now)) return 0;
+            if (items.some(i => !i.completed && i.due_date && Math.ceil((new Date(i.due_date) - now) / 86400000) <= 3)) return 1;
+            return 2;
+          };
+          sorted = Object.keys(grouped).sort((a, b) => urgencyOf(grouped[a]) - urgencyOf(grouped[b]));
+        } else {
+          const earliestOf = items => {
+            const dates = items.filter(i => !i.completed && i.due_date).map(i => new Date(i.due_date).getTime());
+            return dates.length ? Math.min(...dates) : Infinity;
+          };
+          sorted = Object.keys(grouped).sort((a, b) => earliestOf(grouped[a]) - earliestOf(grouped[b]));
+        }
         let html = '';
         for (const course of sorted) {
           if (showHideBtn && hidden.has(course)) continue;
