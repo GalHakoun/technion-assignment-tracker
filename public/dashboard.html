@@ -30,7 +30,7 @@
       <div class="filter-bar" id="filter-bar" style="display:none">
         <div class="filter-group">
           <label class="filter-label">מיין</label>
-          <select class="filter-select" id="sort-select" onchange="currentSort=this.value;renderAssignments(lastAssignments)">
+          <select class="filter-select" id="sort-select" onchange="currentSort=this.value;localStorage.setItem(sortKey(),this.value);renderAssignments(lastAssignments)">
             <option value="date">לפי תאריך</option>
             <option value="course">לפי קורס</option>
             <option value="status">לפי סטטוס</option>
@@ -116,25 +116,74 @@
 
   <!-- Settings modal -->
   <div class="modal-overlay" id="settings-overlay" style="display:none" onclick="if(event.target===this)closeSettings()">
-    <div class="modal-card">
+    <div class="modal-card settings-card">
       <div class="modal-heading">&#9881;&#65039; הגדרות</div>
-      <div class="form-group" style="margin-top:1.25rem">
+
+      <!-- תצוגה -->
+      <div class="settings-section-title">תצוגה</div>
+      <div class="settings-row">
+        <span class="settings-label">מצב לילה</span>
+        <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()"></button>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">מיון ברירת מחדל</span>
+        <select class="settings-select" id="setting-sort" onchange="saveSetting('sort',this.value)">
+          <option value="date">לפי תאריך</option>
+          <option value="course">לפי קורס</option>
+          <option value="status">לפי סטטוס</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">צבע אזהרה לפני הגשה</span>
+        <select class="settings-select" id="setting-threshold" onchange="saveSetting('threshold',this.value)">
+          <option value="1">יום אחד</option>
+          <option value="3">3 ימים</option>
+          <option value="5">5 ימים</option>
+          <option value="7">שבוע</option>
+        </select>
+      </div>
+
+      <!-- מטלות -->
+      <div class="settings-section-title">מטלות</div>
+      <div class="settings-row">
+        <span class="settings-label">הצג מטלות שפג תוקפן</span>
+        <button class="dark-toggle" id="overdue-toggle" onclick="toggleOverdue()"></button>
+      </div>
+      <div id="hidden-courses-section" style="display:none">
+        <div class="settings-row" style="border-top:none;padding-top:0">
+          <span class="settings-label">קורסים מוסתרים</span>
+        </div>
+        <div id="hidden-courses-list"></div>
+      </div>
+
+      <!-- סנכרון -->
+      <div class="settings-section-title">סנכרון</div>
+      <div class="settings-row">
+        <span class="settings-label">סנכרון אוטומטי</span>
+        <select class="settings-select" id="setting-sync-freq" onchange="saveSetting('syncFreq',this.value)">
+          <option value="daily">פעם ביום</option>
+          <option value="login">בכל כניסה</option>
+          <option value="manual">ידני בלבד</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-top:0.75rem">
         <label for="settings-moodle-url">קישור Moodle iCal</label>
         <input type="url" id="settings-moodle-url" dir="ltr" placeholder="https://moodle25.technion.ac.il/calendar/export_execute.php?...">
       </div>
       <div id="settings-message" style="display:none" class="message"></div>
-      <div class="modal-actions">
-        <button class="btn-yes" onclick="saveSettings()">שמור</button>
-        <button class="btn-no" onclick="closeSettings()">ביטול</button>
+      <div class="modal-actions" style="margin-top:0.75rem">
+        <button class="btn-yes" onclick="saveSettings()">שמור קישור</button>
+        <button class="btn-no" onclick="closeSettings()">סגור</button>
       </div>
-      <div style="margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1.25rem;display:flex;align-items:center;justify-content:space-between">
-        <span style="font-size:0.875rem;font-weight:600">מצב לילה</span>
-        <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()"></button>
+
+      <!-- חשבון -->
+      <div class="settings-section-title">חשבון</div>
+      <div class="form-group">
+        <label for="new-password">סיסמה חדשה</label>
+        <input type="password" id="new-password" placeholder="לפחות 6 תווים" minlength="6">
       </div>
-      <div id="hidden-courses-section" style="display:none;margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1.25rem">
-        <div style="font-size:0.875rem;font-weight:600;margin-bottom:0.75rem">קורסים מוסתרים</div>
-        <div id="hidden-courses-list"></div>
-      </div>
+      <div id="password-message" style="display:none" class="message"></div>
+      <button class="btn-yes" style="margin-top:0.5rem;width:100%" onclick="changePassword()">עדכן סיסמה</button>
     </div>
   </div>
 
@@ -153,6 +202,13 @@
     let lastAssignments = [];
     let currentSort = 'date';
     let currentCourseFilter = '';
+    let dueSoonThreshold = 3;
+    let showOverdue = true;
+
+    const sortKey      = () => `default_sort_${currentUser.id}`;
+    const thresholdKey = () => `due_soon_days_${currentUser.id}`;
+    const showOverdueKey = () => `show_overdue_${currentUser.id}`;
+    const syncFreqKey  = () => `sync_freq_${currentUser.id}`;
 
     function hiddenCoursesKey() { return `hidden_courses_${currentUser.id}`; }
     function getHiddenCourses() { return new Set(JSON.parse(localStorage.getItem(hiddenCoursesKey()) || '[]')); }
@@ -203,6 +259,9 @@
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user;
+      currentSort = localStorage.getItem(sortKey()) || 'date';
+      dueSoonThreshold = parseInt(localStorage.getItem(thresholdKey()) || '3');
+      showOverdue = localStorage.getItem(showOverdueKey()) !== 'false';
       const hasUrl = await loadProfile();
       if (!hasUrl) { window.location.href = 'onboarding.html'; return; }
       await loadCourseNames();
@@ -267,13 +326,17 @@
     function openSettings() {
       document.getElementById('settings-overlay').style.display = 'flex';
       document.getElementById('dark-toggle').classList.toggle('on', document.body.classList.contains('dark'));
+      document.getElementById('setting-sort').value = currentSort;
+      document.getElementById('setting-threshold').value = String(dueSoonThreshold);
+      document.getElementById('overdue-toggle').classList.toggle('on', showOverdue);
+      document.getElementById('setting-sync-freq').value = localStorage.getItem(syncFreqKey()) || 'daily';
+      document.getElementById('new-password').value = '';
+      document.getElementById('password-message').style.display = 'none';
+
       const hidden = getHiddenCourses();
       const section = document.getElementById('hidden-courses-section');
       const list = document.getElementById('hidden-courses-list');
-      if (hidden.size === 0) {
-        section.style.display = 'none';
-        return;
-      }
+      if (hidden.size === 0) { section.style.display = 'none'; return; }
       section.style.display = 'block';
       list.innerHTML = [...hidden].map(course => {
         const name = courseNameMap[course] || course;
@@ -282,6 +345,49 @@
           <button class="btn-unhide" onclick="unhideCourse('${escHtml(course)}')">הצג</button>
         </div>`;
       }).join('');
+    }
+
+    function saveSetting(key, value) {
+      if (key === 'sort') {
+        currentSort = value;
+        localStorage.setItem(sortKey(), value);
+        document.getElementById('sort-select').value = value;
+        renderAssignments(lastAssignments);
+      } else if (key === 'threshold') {
+        dueSoonThreshold = parseInt(value);
+        localStorage.setItem(thresholdKey(), value);
+        renderAssignments(lastAssignments);
+      } else if (key === 'syncFreq') {
+        localStorage.setItem(syncFreqKey(), value);
+      }
+    }
+
+    function toggleOverdue() {
+      showOverdue = !showOverdue;
+      localStorage.setItem(showOverdueKey(), String(showOverdue));
+      document.getElementById('overdue-toggle').classList.toggle('on', showOverdue);
+      renderAssignments(lastAssignments);
+    }
+
+    async function changePassword() {
+      const pwd = document.getElementById('new-password').value;
+      const msg = document.getElementById('password-message');
+      if (pwd.length < 6) {
+        msg.textContent = 'הסיסמה חייבת להכיל לפחות 6 תווים';
+        msg.className = 'message error';
+        msg.style.display = 'block';
+        return;
+      }
+      const { error } = await sb.auth.updateUser({ password: pwd });
+      if (error) {
+        msg.textContent = 'שגיאה: ' + error.message;
+        msg.className = 'message error';
+      } else {
+        msg.textContent = 'הסיסמה עודכנה בהצלחה!';
+        msg.className = 'message success';
+        document.getElementById('new-password').value = '';
+      }
+      msg.style.display = 'block';
     }
 
     function closeSettings() {
@@ -480,9 +586,14 @@
       filterBar.style.display = 'flex';
       populateCourseDropdown(assignments);
 
-      const visible = currentCourseFilter
+      let visible = currentCourseFilter
         ? assignments.filter(a => (a.course_name || '—') === currentCourseFilter)
         : assignments;
+
+      if (!showOverdue) {
+        const nowMs = Date.now();
+        visible = visible.filter(a => a.completed || !a.due_date || new Date(a.due_date).getTime() >= nowMs);
+      }
 
       const active = visible.filter(a => !a.completed);
       const done = visible.filter(a => a.completed);
@@ -514,8 +625,8 @@
             (courseNameMap[a] || a).localeCompare(courseNameMap[b] || b, 'he'));
         } else if (currentSort === 'status') {
           const urgencyOf = items => {
-            if (items.some(i => !i.completed && i.due_date && new Date(i.due_date) < now)) return 0;
-            if (items.some(i => !i.completed && i.due_date && Math.ceil((new Date(i.due_date) - now) / 86400000) <= 3)) return 1;
+            if (items.some(i => !i.completed && i.due_date && Math.ceil((new Date(i.due_date) - now) / 86400000) <= 0)) return 0;
+            if (items.some(i => !i.completed && i.due_date && Math.ceil((new Date(i.due_date) - now) / 86400000) <= dueSoonThreshold)) return 1;
             return 2;
           };
           sorted = Object.keys(grouped).sort((a, b) => urgencyOf(grouped[a]) - urgencyOf(grouped[b]));
@@ -593,9 +704,12 @@
         if (days < 0) {
           urgency = 'overdue';
           countdown = `באיחור של ${Math.abs(days)} ימים`;
-        } else if (days <= 3) {
+        } else if (days === 0) {
+          urgency = 'overdue';
+          countdown = 'להגשה היום!';
+        } else if (days <= dueSoonThreshold) {
           urgency = 'soon';
-          countdown = days === 0 ? 'להגשה היום!' : `${days} ימים נותרו`;
+          countdown = `${days} ימים נותרו`;
         } else {
           urgency = 'ok';
           countdown = `${days} ימים נותרו`;
@@ -660,6 +774,9 @@
     // ── Auto sync ──
 
     function maybeAutoSync() {
+      const freq = localStorage.getItem(syncFreqKey()) || 'daily';
+      if (freq === 'manual') return;
+      if (freq === 'login') { syncNow(); return; }
       const todayKey = new Date().toISOString().slice(0, 10);
       const syncKey = `last_auto_sync_${currentUser.id}`;
       if (localStorage.getItem(syncKey) === todayKey) return;
