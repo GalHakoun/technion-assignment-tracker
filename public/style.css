@@ -5,6 +5,8 @@
 }
 
 :root {
+  color-scheme: light;
+}
   --accent: #6c63ff;
   --accent-dark: #5a52d5;
   --bg: #f8f9fa;
@@ -21,6 +23,16 @@ body {
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  transition: background 0.2s, color 0.2s;
+}
+
+body.dark {
+  color-scheme: dark;
+  --bg: #111827;
+  --card-bg: #1f2937;
+  --text: #f3f4f6;
+  --text-muted: #9ca3af;
+  --border: #374151;
 }
 
 /* ── Auth page ── */
@@ -629,6 +641,75 @@ input:focus {
   margin-top: 0.375rem;
   line-height: 1.3;
 }
+
+/* ── Navbar badge ── */
+
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--error);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  padding: 0 5px;
+  margin-right: 0.25rem;
+  vertical-align: middle;
+}
+
+/* ── Dark mode toggle ── */
+
+.dark-toggle {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  border: none;
+  background: var(--border);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.dark-toggle::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s;
+}
+
+.dark-toggle.on {
+  background: var(--accent);
+}
+
+.dark-toggle.on::after {
+  transform: translateX(20px);
+}
+
+/* ── Delete button ── */
+
+.btn-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  padding: 0 0.25rem;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: var(--text-muted);
+}
+
+.assignment-card:hover .btn-delete { opacity: 1; }
+.btn-delete:hover { color: var(--error); }
 
 /* ── Settings icon ── */
 

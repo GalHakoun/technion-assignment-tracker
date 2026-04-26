@@ -9,7 +9,7 @@
 <body>
 
   <nav class="navbar">
-    <div class="navbar-brand">&#128218; Technion Tracker</div>
+    <div class="navbar-brand">&#128218; Technion Tracker <span class="nav-badge" id="nav-badge" style="display:none"></span></div>
     <div class="navbar-right">
       <span class="user-email" id="user-email"></span>
       <button class="btn-settings" onclick="openSettings()" title="Settings">&#9881;&#65039;</button>
@@ -112,6 +112,10 @@
         <button class="btn-yes" onclick="saveSettings()">Save</button>
         <button class="btn-no" onclick="closeSettings()">Cancel</button>
       </div>
+      <div style="margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1.25rem;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:0.875rem;font-weight:600">Dark Mode</span>
+        <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()"></button>
+      </div>
       <div id="hidden-courses-section" style="display:none;margin-top:1.25rem;border-top:1px solid var(--border);padding-top:1.25rem">
         <div style="font-size:0.875rem;font-weight:600;margin-bottom:0.75rem">Hidden Courses</div>
         <div id="hidden-courses-list"></div>
@@ -177,6 +181,7 @@
     }
 
     async function init() {
+      applyDark(localStorage.getItem('dark_mode') === 'true');
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user;
@@ -244,6 +249,7 @@
 
     function openSettings() {
       document.getElementById('settings-overlay').style.display = 'flex';
+      document.getElementById('dark-toggle').classList.toggle('on', document.body.classList.contains('dark'));
       const hidden = getHiddenCourses();
       const section = document.getElementById('hidden-courses-section');
       const list = document.getElementById('hidden-courses-list');
@@ -435,6 +441,17 @@
       const active = assignments.filter(a => !a.completed);
       const done = assignments.filter(a => a.completed);
 
+      // Update navbar badge with upcoming non-completed count
+      const now2 = new Date();
+      const upcoming = active.filter(a => a.due_date && new Date(a.due_date) >= now2);
+      const badge = document.getElementById('nav-badge');
+      if (upcoming.length > 0) {
+        badge.textContent = upcoming.length;
+        badge.style.display = 'inline-flex';
+      } else {
+        badge.style.display = 'none';
+      }
+
       const hidden = getHiddenCourses();
 
       function buildGroups(list, showHideBtn) {
@@ -526,6 +543,9 @@
         : '—';
 
       const completedClass = a.completed ? 'completed' : '';
+      const deleteBtn = !a.raw_event_id
+        ? `<button class="btn-delete" onclick="deleteAssignment('${a.id}')" title="Delete">&#128465;</button>`
+        : '';
 
       return `
         <div class="assignment-card ${urgency} ${completedClass}">
@@ -539,6 +559,7 @@
             <div class="due-date">${dueFmt}</div>
             ${countdown ? `<div class="due-countdown ${urgency}">${countdown}</div>` : ''}
           </div>
+          ${deleteBtn}
         </div>`;
     }
 
@@ -548,6 +569,28 @@
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+    }
+
+    // ── Delete assignment ──
+
+    async function deleteAssignment(id) {
+      if (!confirm('Delete this assignment?')) return;
+      await sb.from('assignments').delete().eq('id', id).eq('user_id', currentUser.id);
+      await loadAssignments();
+    }
+
+    // ── Dark mode ──
+
+    function applyDark(dark) {
+      document.body.classList.toggle('dark', dark);
+      const btn = document.getElementById('dark-toggle');
+      if (btn) btn.classList.toggle('on', dark);
+    }
+
+    function toggleDark() {
+      const isDark = document.body.classList.contains('dark');
+      localStorage.setItem('dark_mode', !isDark);
+      applyDark(!isDark);
     }
 
     // ── Auto sync ──
