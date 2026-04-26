@@ -223,7 +223,7 @@
             user_id: currentUser.id,
             raw_event_id: event.id,
             title: event.title,
-            course_name: extractCourse(event.title),
+            course_name: event.course_name || extractCourse(event.title),
             due_date: event.due_date,
           },
           { onConflict: 'user_id,raw_event_id' }

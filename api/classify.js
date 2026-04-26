@@ -50,7 +50,7 @@ module.exports = async function handler(req, res) {
   if (userError || !user) return res.status(401).json({ error: 'Invalid token' });
 
   const [{ data: events }, { data: remembered }, { data: existing }] = await Promise.all([
-    sb.from('raw_events').select('id, title, description, start_time').eq('user_id', user.id),
+    sb.from('raw_events').select('id, title, description, start_time, raw_data').eq('user_id', user.id),
     sb.from('classifications').select('normalized_title, classification').eq('user_id', user.id),
     sb.from('assignments').select('raw_event_id').eq('user_id', user.id),
   ]);
@@ -70,19 +70,24 @@ module.exports = async function handler(req, res) {
     const result = rememberedMap[normalizedTitle] || classify(event.title, event.description);
 
     if (result === 'homework') {
+      const cat = event.raw_data?.categories?.[0];
+      const courseNum = cat ? cat.split('.')[0] : null;
       toInsert.push({
         user_id: user.id,
         raw_event_id: event.id,
         title: event.title,
-        course_name: extractCourse(event.title),
+        course_name: courseNum || extractCourse(event.title),
         due_date: event.start_time,
       });
     } else if (result === 'uncertain') {
+      const cat = event.raw_data?.categories?.[0];
+      const courseNum = cat ? cat.split('.')[0] : null;
       uncertain.push({
         id: event.id,
         title: event.title,
         due_date: event.start_time,
         normalized_title: normalizedTitle,
+        course_name: courseNum || extractCourse(event.title),
       });
     }
   }
