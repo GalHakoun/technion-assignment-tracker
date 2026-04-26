@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&display=swap');
+
 * {
   margin: 0;
   padding: 0;
@@ -6,7 +8,6 @@
 
 :root {
   color-scheme: light;
-}
   --accent: #6c63ff;
   --accent-dark: #5a52d5;
   --bg: #f8f9fa;
@@ -19,7 +20,8 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: 0;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -372,15 +374,15 @@ input:focus {
   justify-content: space-between;
   padding: 0.875rem 1rem;
   border: 1px solid var(--border);
-  border-left: 3px solid var(--border);
+  border-inline-start: 3px solid var(--border);
   border-radius: 8px;
   background: var(--bg);
   gap: 1rem;
 }
 
-.assignment-card.overdue { border-left-color: var(--error); }
-.assignment-card.soon    { border-left-color: #f59e0b; }
-.assignment-card.ok      { border-left-color: var(--success); }
+.assignment-card.overdue { border-inline-start-color: var(--error); }
+.assignment-card.soon    { border-inline-start-color: #f59e0b; }
+.assignment-card.ok      { border-inline-start-color: var(--success); }
 
 .assignment-info { flex: 1; min-width: 0; }
 
@@ -403,7 +405,7 @@ input:focus {
 }
 
 .assignment-due {
-  text-align: right;
+  text-align: end;
   flex-shrink: 0;
 }
 
@@ -438,7 +440,7 @@ input:focus {
 
 .assignment-card.completed {
   opacity: 0.5;
-  border-left-color: var(--border) !important;
+  border-inline-start-color: var(--border) !important;
 }
 
 .assignment-card.completed .assignment-title {
@@ -465,10 +467,9 @@ input:focus {
   color: var(--border);
   font-size: 0.75rem;
   padding: 0 0.25rem;
-  margin-right: auto;
+  margin-inline-end: auto;
   line-height: 1;
   transition: color 0.2s;
-  float: left;
 }
 
 .btn-hide-course:hover { color: var(--error); }
