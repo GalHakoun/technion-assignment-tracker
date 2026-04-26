@@ -186,6 +186,7 @@
       await loadCourseNames();
       await loadAssignments();
       await maybeShowMorning();
+      maybeAutoSync();
     }
 
     async function maybeShowMorning() {
@@ -547,6 +548,16 @@
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+    }
+
+    // ── Auto sync ──
+
+    function maybeAutoSync() {
+      const todayKey = new Date().toISOString().slice(0, 10);
+      const syncKey = `last_auto_sync_${currentUser.id}`;
+      if (localStorage.getItem(syncKey) === todayKey) return;
+      localStorage.setItem(syncKey, todayKey);
+      syncNow();
     }
 
     // ── Manual assignment entry ──
