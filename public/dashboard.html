@@ -9,7 +9,8 @@
 <body>
 
   <nav class="navbar">
-    <div class="navbar-brand">&#128218; Technion Tracker <span class="nav-badge" id="nav-badge" style="display:none"></span></div>
+    <div class="navbar-brand">&#128218; Technion Tracker</div>
+    <span class="nav-badge" id="nav-badge" style="display:none"><span id="nav-badge-count"></span> משימות להגשה</span>
     <div class="navbar-right">
       <span class="user-email" id="user-email"></span>
       <button class="btn-settings" onclick="openSettings()" title="Settings">&#9881;&#65039;</button>
@@ -446,7 +447,7 @@
       const upcoming = active.filter(a => a.due_date && new Date(a.due_date) >= now2);
       const badge = document.getElementById('nav-badge');
       if (upcoming.length > 0) {
-        badge.textContent = upcoming.length;
+        document.getElementById('nav-badge-count').textContent = upcoming.length;
         badge.style.display = 'inline-flex';
       } else {
         badge.style.display = 'none';
