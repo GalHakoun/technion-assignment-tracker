@@ -18,20 +18,27 @@
     <div class="navbar-right">
       <button class="btn-logout" onclick="logout()">התנתק</button>
       <button class="btn-settings" onclick="openSettings()" title="Settings">&#9881;&#65039;</button>
+      <button class="btn-search" id="search-btn" onclick="toggleSearch()" title="חיפוש">&#128269;</button>
     </div>
     <div class="navbar-brand"><img src="logo.png" alt="Technion Tracker" class="navbar-logo"> Technion Tracker</div>
   </nav>
 
   <div class="dashboard-content">
 
+    <!-- Pinned assignment -->
+    <div id="pinned-section" style="display:none"></div>
+
     <!-- Assignments -->
     <div class="card">
       <div class="card-header">
-        <div class="card-title">&#128203; המטלות שלך <span class="task-count" id="nav-badge" style="display:none"></span></div>
+        <div class="card-title">&#128203; כל המטלות <span class="task-count" id="nav-badge" style="display:none"></span></div>
         <div style="display:flex;gap:0.5rem">
           <button class="btn-add" onclick="openAddModal()" title="הוספת מטלה">&#43;</button>
           <button class="btn-sync" id="sync-btn" onclick="syncNow()">סנכרן</button>
         </div>
+      </div>
+      <div id="search-bar" class="search-bar" style="display:none">
+        <input type="text" id="search-input" class="search-input" placeholder="חפש מטלה..." oninput="onSearchInput(this.value)" onkeydown="if(event.key==='Escape')toggleSearch()" dir="rtl">
       </div>
       <div class="filter-bar" id="filter-bar" style="display:none">
         <div class="filter-group">
@@ -210,6 +217,8 @@
     let currentCourseFilter = '';
     let dueSoonThreshold = 3;
     let showOverdue = true;
+    let searchQuery = '';
+    let pinnedId = null;
 
     const sortKey      = () => `default_sort_${currentUser.id}`;
     const thresholdKey = () => `due_soon_days_${currentUser.id}`;
@@ -265,6 +274,7 @@
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user;
+      pinnedId = localStorage.getItem(`pinned_assignment_${currentUser.id}`) || null;
       currentSort = localStorage.getItem(sortKey()) || 'date';
       dueSoonThreshold = parseInt(localStorage.getItem(thresholdKey()) || '3');
       showOverdue = localStorage.getItem(showOverdueKey()) !== 'false';
@@ -543,6 +553,98 @@
       return null;
     }
 
+    // ── Search ──
+
+    function toggleSearch() {
+      const bar = document.getElementById('search-bar');
+      const btn = document.getElementById('search-btn');
+      const isOpen = bar.style.display !== 'none';
+      if (isOpen) {
+        bar.style.display = 'none';
+        btn.classList.remove('active');
+        searchQuery = '';
+        renderAssignments(lastAssignments);
+      } else {
+        bar.style.display = 'block';
+        btn.classList.add('active');
+        setTimeout(() => document.getElementById('search-input').focus(), 50);
+      }
+    }
+
+    function onSearchInput(val) {
+      searchQuery = val.trim().toLowerCase();
+      renderAssignments(lastAssignments);
+    }
+
+    // ── Pin ──
+
+    function togglePin(id) {
+      pinnedId = (pinnedId === id) ? null : id;
+      if (pinnedId) localStorage.setItem(`pinned_assignment_${currentUser.id}`, pinnedId);
+      else localStorage.removeItem(`pinned_assignment_${currentUser.id}`);
+      renderAssignments(lastAssignments);
+    }
+
+    function renderPinnedSection(assignments) {
+      const section = document.getElementById('pinned-section');
+      if (!pinnedId) { section.style.display = 'none'; section.innerHTML = ''; return; }
+      const a = assignments.find(x => x.id === pinnedId);
+      if (!a) { section.style.display = 'none'; section.innerHTML = ''; return; }
+
+      const now = new Date();
+      const due = a.due_date ? new Date(a.due_date) : null;
+      let urgencyClass = 'ok', countdown = '', statusText = 'בעבודה';
+
+      if (a.completed) {
+        statusText = 'הושלם ✅';
+        urgencyClass = 'done';
+      } else if (due) {
+        const days = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
+        const hours = Math.round((due - now) / (1000 * 60 * 60));
+        if (days < 0) {
+          urgencyClass = 'overdue';
+          countdown = `באיחור של ${Math.abs(days)} ימים`;
+          statusText = 'באיחור ⚠️';
+        } else if (days === 0) {
+          urgencyClass = 'overdue';
+          countdown = hours > 0 ? `${hours} שעות` : 'להגשה היום!';
+          statusText = 'דחוף! ⚡';
+        } else if (days <= dueSoonThreshold) {
+          urgencyClass = 'soon';
+          countdown = `${days} ימים נותרו`;
+          statusText = 'בקרוב ⏰';
+        } else {
+          countdown = `${days} ימים נותרו`;
+        }
+      }
+
+      const dueFmt = due
+        ? due.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'short' })
+        : null;
+      const timeStr = due
+        ? due.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+        : null;
+      const courseName = courseNameMap[a.course_name] || a.course_name || '';
+
+      section.style.display = 'block';
+      section.innerHTML = `
+        <div class="pinned-card urgency-${urgencyClass}">
+          <div class="pinned-top">
+            <div class="pinned-status-badge">${escHtml(statusText)}</div>
+            <div class="pinned-label">&#128204; משימה במיקוד</div>
+          </div>
+          <div class="pinned-body">
+            ${courseName ? `<div class="pinned-course">${escHtml(courseName)}</div>` : ''}
+            <div class="pinned-title">${escHtml(a.title)}</div>
+            ${dueFmt ? `<div class="pinned-due">&#128197; ${escHtml(dueFmt)}, ${escHtml(timeStr)}${countdown ? ` | &#x23F3; ${escHtml(countdown)}` : ''}</div>` : ''}
+          </div>
+          <div class="pinned-actions">
+            <button class="btn-yes" onclick="toggleComplete('${a.id}', ${a.completed})">${a.completed ? '&#8617; בטל סימון' : '&#10003; סמן כבוצע'}</button>
+            <button class="btn-no" onclick="togglePin('${a.id}')">הסר מהמיקוד</button>
+          </div>
+        </div>`;
+    }
+
     // ── Assignments display ──
 
     async function loadAssignments() {
@@ -578,6 +680,8 @@
       const container = document.getElementById('assignments-container');
       const filterBar = document.getElementById('filter-bar');
 
+      renderPinnedSection(assignments);
+
       if (!assignments.length) {
         filterBar.style.display = 'none';
         container.innerHTML = `
@@ -598,6 +702,14 @@
       if (!showOverdue) {
         const nowMs = Date.now();
         visible = visible.filter(a => a.completed || !a.due_date || new Date(a.due_date).getTime() >= nowMs);
+      }
+
+      if (searchQuery) {
+        visible = visible.filter(a => {
+          const title = (a.title || '').toLowerCase();
+          const course = (courseNameMap[a.course_name] || a.course_name || '').toLowerCase();
+          return title.includes(searchQuery) || course.includes(searchQuery);
+        });
       }
 
       const active = visible.filter(a => !a.completed);
@@ -726,6 +838,8 @@
         : '—';
 
       const completedClass = a.completed ? 'completed' : '';
+      const isPinned = a.id === pinnedId;
+      const pinBtn = `<button class="btn-pin${isPinned ? ' is-pinned' : ''}" onclick="togglePin('${a.id}')" title="${isPinned ? 'הסר מהמיקוד' : 'שים במיקוד'}">&#128204;</button>`;
       const deleteBtn = !a.raw_event_id
         ? `<button class="btn-delete" onclick="deleteAssignment('${a.id}')" title="מחק">&#128465;</button>`
         : '';
@@ -742,6 +856,7 @@
             <div class="due-date">${dueFmt}</div>
             ${countdown ? `<div class="due-countdown ${urgency}">${countdown}</div>` : ''}
           </div>
+          ${pinBtn}
           ${deleteBtn}
         </div>`;
     }
