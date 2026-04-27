@@ -51,9 +51,12 @@
         </div>
         <div class="filter-group">
           <label class="filter-label">קורס</label>
-          <select class="filter-select" id="course-filter-select" onchange="currentCourseFilter=this.value;renderAssignments(lastAssignments)">
-            <option value="">כל הקורסים</option>
-          </select>
+          <div class="course-dropdown" id="course-dropdown">
+            <button class="course-dropdown-btn" id="course-filter-btn" onclick="toggleCourseDropdown()">
+              <span id="course-filter-label">כל הקורסים</span> &#9660;
+            </button>
+            <div class="course-dropdown-menu" id="course-dropdown-menu" style="display:none"></div>
+          </div>
         </div>
       </div>
       <div id="sync-message" style="display:none" class="message"></div>
@@ -214,11 +217,10 @@
     let courseNameMap = {};
     let lastAssignments = [];
     let currentSort = 'date';
-    let currentCourseFilter = '';
+    let currentCourseFilters = new Set();
     let dueSoonThreshold = 3;
     let showOverdue = true;
     let searchQuery = '';
-    let pinnedId = null;
 
     const sortKey      = () => `default_sort_${currentUser.id}`;
     const thresholdKey = () => `due_soon_days_${currentUser.id}`;
@@ -274,7 +276,6 @@
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user;
-      pinnedId = localStorage.getItem(`pinned_assignment_${currentUser.id}`) || null;
       currentSort = localStorage.getItem(sortKey()) || 'date';
       dueSoonThreshold = parseInt(localStorage.getItem(thresholdKey()) || '3');
       showOverdue = localStorage.getItem(showOverdueKey()) !== 'false';
@@ -578,19 +579,15 @@
 
     // ── Pin ──
 
-    function togglePin(id) {
-      pinnedId = (pinnedId === id) ? null : id;
-      if (pinnedId) localStorage.setItem(`pinned_assignment_${currentUser.id}`, pinnedId);
-      else localStorage.removeItem(`pinned_assignment_${currentUser.id}`);
-      renderAssignments(lastAssignments);
+    async function togglePin(id, currentPinned) {
+      await sb.from('assignments')
+        .update({ pinned: !currentPinned })
+        .eq('id', id)
+        .eq('user_id', currentUser.id);
+      await loadAssignments();
     }
 
-    function renderPinnedSection(assignments) {
-      const section = document.getElementById('pinned-section');
-      if (!pinnedId) { section.style.display = 'none'; section.innerHTML = ''; return; }
-      const a = assignments.find(x => x.id === pinnedId);
-      if (!a) { section.style.display = 'none'; section.innerHTML = ''; return; }
-
+    function buildPinnedCard(a) {
       const now = new Date();
       const due = a.due_date ? new Date(a.due_date) : null;
       let urgencyClass = 'ok', countdown = '', statusText = 'בעבודה';
@@ -626,8 +623,7 @@
         : null;
       const courseName = courseNameMap[a.course_name] || a.course_name || '';
 
-      section.style.display = 'block';
-      section.innerHTML = `
+      return `
         <div class="pinned-card urgency-${urgencyClass}">
           <div class="pinned-top">
             <div class="pinned-status-badge">${escHtml(statusText)}</div>
@@ -640,9 +636,27 @@
           </div>
           <div class="pinned-actions">
             <button class="btn-yes" onclick="toggleComplete('${a.id}', ${a.completed})">${a.completed ? '&#8617; בטל סימון' : '&#10003; סמן כבוצע'}</button>
-            <button class="btn-no" onclick="togglePin('${a.id}')">הסר מהמיקוד</button>
+            <button class="btn-no" onclick="togglePin('${a.id}', true)">הסר מהמיקוד</button>
           </div>
         </div>`;
+    }
+
+    function renderPinnedSection(assignments) {
+      const section = document.getElementById('pinned-section');
+      const pinned = assignments.filter(a => a.pinned);
+      if (!pinned.length) { section.style.display = 'none'; section.innerHTML = ''; return; }
+      section.style.display = 'flex';
+      section.innerHTML = pinned.map(buildPinnedCard).join('');
+    }
+
+    // ── Urgent ──
+
+    async function toggleUrgent(id, currentUrgent) {
+      await sb.from('assignments')
+        .update({ urgent: !currentUrgent })
+        .eq('id', id)
+        .eq('user_id', currentUser.id);
+      await loadAssignments();
     }
 
     // ── Assignments display ──
@@ -658,22 +672,50 @@
       renderAssignments(lastAssignments);
     }
 
+    function toggleCourseDropdown() {
+      const menu = document.getElementById('course-dropdown-menu');
+      menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleCourseFilter(course, checked) {
+      if (checked) currentCourseFilters.add(course);
+      else currentCourseFilters.delete(course);
+      updateCourseFilterLabel();
+      renderAssignments(lastAssignments);
+    }
+
+    function updateCourseFilterLabel() {
+      const label = document.getElementById('course-filter-label');
+      if (!label) return;
+      if (currentCourseFilters.size === 0) {
+        label.textContent = 'כל הקורסים';
+      } else if (currentCourseFilters.size === 1) {
+        const course = [...currentCourseFilters][0];
+        label.textContent = courseNameMap[course] || course;
+      } else {
+        label.textContent = `${currentCourseFilters.size} קורסים`;
+      }
+    }
+
     function populateCourseDropdown(assignments) {
-      const sel = document.getElementById('course-filter-select');
       const hidden = getHiddenCourses();
       const courses = [...new Set(assignments.map(a => a.course_name || '—'))]
         .filter(c => !hidden.has(c))
         .sort((a, b) => (courseNameMap[a] || a).localeCompare(courseNameMap[b] || b, 'he'));
-      const prev = sel.value;
-      sel.innerHTML = '<option value="">כל הקורסים</option>';
-      for (const c of courses) {
-        const opt = document.createElement('option');
-        opt.value = c;
-        opt.textContent = courseNameMap[c] || c;
-        sel.appendChild(opt);
+      for (const f of currentCourseFilters) {
+        if (!courses.includes(f)) currentCourseFilters.delete(f);
       }
-      if (courses.includes(prev)) sel.value = prev;
-      else currentCourseFilter = '';
+      const menu = document.getElementById('course-dropdown-menu');
+      if (!menu) return;
+      menu.innerHTML = courses.map(c => {
+        const name = escHtml(courseNameMap[c] || c);
+        const checked = currentCourseFilters.has(c) ? 'checked' : '';
+        return `<label class="course-check-item">
+          <input type="checkbox" ${checked} onchange="toggleCourseFilter('${escHtml(c)}', this.checked)">
+          <span>${name}</span>
+        </label>`;
+      }).join('');
+      updateCourseFilterLabel();
     }
 
     function renderAssignments(assignments) {
@@ -695,8 +737,8 @@
       filterBar.style.display = 'flex';
       populateCourseDropdown(assignments);
 
-      let visible = currentCourseFilter
-        ? assignments.filter(a => (a.course_name || '—') === currentCourseFilter)
+      let visible = currentCourseFilters.size > 0
+        ? assignments.filter(a => currentCourseFilters.has(a.course_name || '—'))
         : assignments;
 
       if (!showOverdue) {
@@ -736,23 +778,38 @@
           grouped[key].push(a);
         }
         const now = new Date();
+        const hasUrgent = items => items.some(i => i.urgent && !i.completed);
         let sorted;
         if (currentSort === 'course') {
-          sorted = Object.keys(grouped).sort((a, b) =>
-            (courseNameMap[a] || a).localeCompare(courseNameMap[b] || b, 'he'));
+          sorted = Object.keys(grouped).sort((a, b) => {
+            const ua = hasUrgent(grouped[a]) ? 0 : 1;
+            const ub = hasUrgent(grouped[b]) ? 0 : 1;
+            if (ua !== ub) return ua - ub;
+            return (courseNameMap[a] || a).localeCompare(courseNameMap[b] || b, 'he');
+          });
         } else if (currentSort === 'status') {
           const urgencyOf = items => {
             if (items.some(i => !i.completed && i.due_date && Math.ceil((new Date(i.due_date) - now) / 86400000) <= 0)) return 0;
             if (items.some(i => !i.completed && i.due_date && Math.ceil((new Date(i.due_date) - now) / 86400000) <= dueSoonThreshold)) return 1;
             return 2;
           };
-          sorted = Object.keys(grouped).sort((a, b) => urgencyOf(grouped[a]) - urgencyOf(grouped[b]));
+          sorted = Object.keys(grouped).sort((a, b) => {
+            const ua = hasUrgent(grouped[a]) ? -1 : 0;
+            const ub = hasUrgent(grouped[b]) ? -1 : 0;
+            if (ua !== ub) return ua - ub;
+            return urgencyOf(grouped[a]) - urgencyOf(grouped[b]);
+          });
         } else {
           const earliestOf = items => {
             const dates = items.filter(i => !i.completed && i.due_date).map(i => new Date(i.due_date).getTime());
             return dates.length ? Math.min(...dates) : Infinity;
           };
-          sorted = Object.keys(grouped).sort((a, b) => earliestOf(grouped[a]) - earliestOf(grouped[b]));
+          sorted = Object.keys(grouped).sort((a, b) => {
+            const ua = hasUrgent(grouped[a]) ? -1 : 0;
+            const ub = hasUrgent(grouped[b]) ? -1 : 0;
+            if (ua !== ub) return ua - ub;
+            return earliestOf(grouped[a]) - earliestOf(grouped[b]);
+          });
         }
         let html = '';
         for (const course of sorted) {
@@ -762,6 +819,8 @@
             ? `<button class="btn-hide-course" onclick="hideCourse('${escHtml(course)}')" title="הסתר קורס">&#10005;</button>`
             : '';
           const sortedItems = grouped[course].slice().sort((a, b) => {
+            if (a.urgent && !b.urgent) return -1;
+            if (!a.urgent && b.urgent) return 1;
             if (!a.due_date) return 1;
             if (!b.due_date) return -1;
             return new Date(a.due_date) - new Date(b.due_date);
@@ -838,14 +897,15 @@
         : '—';
 
       const completedClass = a.completed ? 'completed' : '';
-      const isPinned = a.id === pinnedId;
-      const pinBtn = `<button class="btn-pin${isPinned ? ' is-pinned' : ''}" onclick="togglePin('${a.id}')" title="${isPinned ? 'הסר מהמיקוד' : 'שים במיקוד'}">&#128204;</button>`;
+      const urgentClass = (a.urgent && !a.completed) ? 'urgent' : '';
+      const pinBtn = `<button class="btn-pin${a.pinned ? ' is-pinned' : ''}" onclick="togglePin('${a.id}', ${a.pinned})" title="${a.pinned ? 'הסר מהמיקוד' : 'שים במיקוד'}">&#128204;</button>`;
+      const urgentBtn = `<button class="btn-urgent${a.urgent ? ' is-urgent' : ''}" onclick="toggleUrgent('${a.id}', ${a.urgent})" title="${a.urgent ? 'בטל דחיפות' : 'סמן כדחוף'}">&#9889;</button>`;
       const deleteBtn = !a.raw_event_id
         ? `<button class="btn-delete" onclick="deleteAssignment('${a.id}')" title="מחק">&#128465;</button>`
         : '';
 
       return `
-        <div class="assignment-card ${urgency} ${completedClass}">
+        <div class="assignment-card ${urgency} ${urgentClass} ${completedClass}">
           <button class="btn-complete" onclick="toggleComplete('${a.id}', ${a.completed})" title="${a.completed ? 'בטל סימון' : 'סמן כהושלם'}">
             ${a.completed ? '&#9989;' : '&#9711;'}
           </button>
@@ -856,6 +916,7 @@
             <div class="due-date">${dueFmt}</div>
             ${countdown ? `<div class="due-countdown ${urgency}">${countdown}</div>` : ''}
           </div>
+          ${urgentBtn}
           ${pinBtn}
           ${deleteBtn}
         </div>`;
@@ -975,6 +1036,14 @@
       await sb.auth.signOut();
       window.location.href = 'index.html';
     }
+
+    document.addEventListener('click', function(e) {
+      const dropdown = document.getElementById('course-dropdown');
+      if (dropdown && !dropdown.contains(e.target)) {
+        const menu = document.getElementById('course-dropdown-menu');
+        if (menu) menu.style.display = 'none';
+      }
+    });
 
     init();
   </script>
