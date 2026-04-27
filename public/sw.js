@@ -1,9 +1,5 @@
-const CACHE = 'technion-v4';
-const SHELL = [
-  '/index.html',
-  '/dashboard.html',
-  '/onboarding.html',
-  '/style.css',
+const CACHE = 'technion-static-v1';
+const IMAGES = [
   '/logo.png',
   '/icon-192.png',
   '/icon-512.png',
@@ -14,7 +10,7 @@ const SHELL = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(IMAGES)));
   self.skipWaiting();
 });
 
@@ -29,12 +25,29 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  // Always use network for Supabase and external APIs
-  if (url.hostname.includes('supabase') || url.hostname.includes('cheesefork') || url.hostname.includes('googleapis')) {
+
+  // Always go to network for external services
+  if (
+    url.hostname.includes('supabase') ||
+    url.hostname.includes('cheesefork') ||
+    url.hostname.includes('googleapis') ||
+    url.hostname.includes('jsdelivr')
+  ) return;
+
+  // Cache-first for images only (they never change)
+  if (/\.(png|jpg|jpeg|svg|ico|webp)$/.test(url.pathname)) {
+    e.respondWith(
+      caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      }))
+    );
     return;
   }
-  // Cache-first for local assets
+
+  // Network-first for HTML/CSS/JS — always get fresh, fall back to cache if offline
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
+    fetch(e.request).catch(() => caches.match(e.request))
   );
 });
