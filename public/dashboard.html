@@ -404,10 +404,9 @@
     async function saveSettings() {
       const url = document.getElementById('settings-moodle-url').value.trim();
       showSettingsMessage('', '');
-      const { error } = await sb.from('profiles').upsert(
-        { user_id: currentUser.id, moodle_ical_url: url },
-        { onConflict: 'user_id' }
-      );
+      const { error } = await sb.from('profiles')
+        .update({ moodle_ical_url: url })
+        .eq('user_id', currentUser.id);
       if (error) {
         showSettingsMessage('שגיאה בשמירה: ' + error.message, 'error');
       } else {

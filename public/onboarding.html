@@ -379,10 +379,9 @@
     btn.textContent = 'שומר...';
 
     const { data: { session } } = await sb.auth.getSession();
-    const { error } = await sb.from('profiles').upsert(
-      { user_id: session.user.id, moodle_ical_url: url },
-      { onConflict: 'user_id' }
-    );
+    const { error } = await sb.from('profiles')
+      .update({ moodle_ical_url: url })
+      .eq('user_id', session.user.id);
 
     if (error) {
       showMessage('שגיאה בשמירה: ' + error.message, 'error');
