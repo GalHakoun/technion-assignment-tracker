@@ -1025,13 +1025,16 @@ body.dark .assignment-card.overdue {
 
 #pinned-section {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 0.75rem;
 }
 
 /* ── Pinned card ── */
 
 .pinned-card {
+  flex: 1;
+  min-width: 260px;
   background: #fffbf0;
   border: 2px solid #f59e0b;
   border-radius: 12px;

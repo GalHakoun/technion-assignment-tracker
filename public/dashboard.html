@@ -596,22 +596,25 @@
         statusText = 'הושלם ✅';
         urgencyClass = 'done';
       } else if (due) {
-        const days = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
-        const hours = Math.round((due - now) / (1000 * 60 * 60));
-        if (days < 0) {
+        const msLeft = due - now;
+        const calDays = Math.round(
+          (new Date(due.getFullYear(), due.getMonth(), due.getDate()) -
+           new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 86400000
+        );
+        if (msLeft < 0) {
           urgencyClass = 'overdue';
-          countdown = `באיחור של ${Math.abs(days)} ימים`;
+          countdown = `באיחור של ${Math.ceil(-msLeft / 86400000)} ימים`;
           statusText = 'באיחור ⚠️';
-        } else if (days === 0) {
+        } else if (calDays === 0) {
           urgencyClass = 'overdue';
-          countdown = hours > 0 ? `${hours} שעות` : 'להגשה היום!';
+          countdown = 'להגשה היום!';
           statusText = 'דחוף! ⚡';
-        } else if (days <= dueSoonThreshold) {
+        } else if (calDays <= dueSoonThreshold) {
           urgencyClass = 'soon';
-          countdown = `${days} ימים נותרו`;
+          countdown = `${calDays} ימים נותרו`;
           statusText = 'בקרוב ⏰';
         } else {
-          countdown = `${days} ימים נותרו`;
+          countdown = `${calDays} ימים נותרו`;
         }
       }
 
@@ -788,9 +791,13 @@
             return (courseNameMap[a] || a).localeCompare(courseNameMap[b] || b, 'he');
           });
         } else if (currentSort === 'status') {
+          const calDaysFrom = d => Math.round(
+            (new Date(d.getFullYear(),d.getMonth(),d.getDate()) -
+             new Date(now.getFullYear(),now.getMonth(),now.getDate())) / 86400000
+          );
           const urgencyOf = items => {
-            if (items.some(i => !i.completed && i.due_date && Math.ceil((new Date(i.due_date) - now) / 86400000) <= 0)) return 0;
-            if (items.some(i => !i.completed && i.due_date && Math.ceil((new Date(i.due_date) - now) / 86400000) <= dueSoonThreshold)) return 1;
+            if (items.some(i => { if (i.completed||!i.due_date) return false; const d=new Date(i.due_date); return d<now||calDaysFrom(d)===0; })) return 0;
+            if (items.some(i => { if (i.completed||!i.due_date) return false; const d=new Date(i.due_date); return calDaysFrom(d)<=dueSoonThreshold; })) return 1;
             return 2;
           };
           sorted = Object.keys(grouped).sort((a, b) => {
@@ -876,19 +883,23 @@
       let urgency = 'ok', countdown = '';
 
       if (!a.completed && due) {
-        const days = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
-        if (days < 0) {
+        const msLeft = due - now;
+        const calDays = Math.round(
+          (new Date(due.getFullYear(), due.getMonth(), due.getDate()) -
+           new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 86400000
+        );
+        if (msLeft < 0) {
           urgency = 'overdue';
-          countdown = `באיחור של ${Math.abs(days)} ימים`;
-        } else if (days === 0) {
+          countdown = `באיחור של ${Math.ceil(-msLeft / 86400000)} ימים`;
+        } else if (calDays === 0) {
           urgency = 'overdue';
           countdown = 'להגשה היום!';
-        } else if (days <= dueSoonThreshold) {
+        } else if (calDays <= dueSoonThreshold) {
           urgency = 'soon';
-          countdown = `${days} ימים נותרו`;
+          countdown = `${calDays} ימים נותרו`;
         } else {
           urgency = 'ok';
-          countdown = `${days} ימים נותרו`;
+          countdown = `${calDays} ימים נותרו`;
         }
       }
 
@@ -900,9 +911,7 @@
       const urgentClass = (a.urgent && !a.completed) ? 'urgent' : '';
       const pinBtn = `<button class="btn-pin${a.pinned ? ' is-pinned' : ''}" onclick="togglePin('${a.id}', ${a.pinned})" title="${a.pinned ? 'הסר מהמיקוד' : 'שים במיקוד'}">&#128204;</button>`;
       const urgentBtn = `<button class="btn-urgent${a.urgent ? ' is-urgent' : ''}" onclick="toggleUrgent('${a.id}', ${a.urgent})" title="${a.urgent ? 'בטל דחיפות' : 'סמן כדחוף'}">&#9889;</button>`;
-      const deleteBtn = !a.raw_event_id
-        ? `<button class="btn-delete" onclick="deleteAssignment('${a.id}')" title="מחק">&#128465;</button>`
-        : '';
+      const deleteBtn = `<button class="btn-delete" onclick="deleteAssignment('${a.id}')" title="מחק">&#128465;</button>`;
 
       return `
         <div class="assignment-card ${urgency} ${urgentClass} ${completedClass}">

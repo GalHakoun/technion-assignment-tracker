@@ -1,4 +1,4 @@
-const CACHE = 'technion-v3';
+const CACHE = 'technion-v4';
 const SHELL = [
   '/index.html',
   '/dashboard.html',
