@@ -40,7 +40,8 @@ ${conversationText}`;
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: summaryPrompt }] }]
+          contents: [{ role: 'user', parts: [{ text: summaryPrompt }] }],
+          generationConfig: { thinkingConfig: { thinkingBudget: 0 } }
         })
       }
     );
