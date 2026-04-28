@@ -62,11 +62,15 @@ ${conversationText}`;
     if (dbError) console.error('Supabase insert error:', dbError);
 
     if (process.env.RESEND_API_KEY) {
+      const summaryHtml = summary.replace(/\n/g, '<br>');
+      const convoHtml = saveConversation
+        ? `<hr><h3>שיחה מלאה:</h3><p>${conversationText.replace(/\n/g, '<br>')}</p>`
+        : '';
       await resend.emails.send({
         from: 'Technion Tracker <onboarding@resend.dev>',
         to: 'gal.hakoun@gmail.com',
         subject: `פידבק חדש: ${ticketType}`,
-        text: summary + (saveConversation ? `\n\n---\nשיחה מלאה:\n${conversationText}` : '')
+        html: `<div dir="rtl" style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6">${summaryHtml}${convoHtml}</div>`
       }).catch(e => console.error('Resend error:', e));
     }
 

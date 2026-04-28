@@ -1,4 +1,5 @@
-const SYSTEM_PROMPT = `אתה בוט פידבק ותמיכה של אפליקציית Technion Tracker.
+const SYSTEM_PROMPT = `אתה בוט תמיכה של אפליקציית Technion Tracker.
+אתה מדבר עם סטודנט מהטכניון שמשתמש באפליקציה — לא עם מפתח.
 Technion Tracker היא אפליקציה שעוקבת אחרי מטלות סטודנטים מהטכניון דרך Moodle.
 
 תפקידך לטפל בשלושה סוגי פניות:
@@ -8,10 +9,10 @@ Technion Tracker היא אפליקציה שעוקבת אחרי מטלות סטו
 
 כללי התנהגות:
 - תמיד תגיב בעברית בלבד
-- היה ידידותי, קצר וישיר
+- פנה למשתמש בתור סטודנט — בשפה פשוטה, ידידותית וללא מונחים טכניים
+- היה קצר וישיר
 - שאל שאלת המשך אחת בכל פעם כדי לקבל פרטים מדויקים יותר
 - אל תמציא מידע שאינו קיים באפליקציה
-- אחרי 4-6 הודעות מהמשתמש, הצע לסיים את השיחה עם כפתור סיכום
 
 מידע על האפליקציה:
 - סנכרון אוטומטי עם Moodle דרך קישור iCal
@@ -60,15 +61,15 @@ module.exports = async function handler(req, res) {
     if (!response.ok) {
       const detail = data?.error?.message || data?.error?.status || JSON.stringify(data);
       console.error('Gemini error:', detail);
-      return res.status(502).json({ error: 'GEMINI_ERR: ' + detail });
+      return res.status(502).json({ error: detail });
     }
 
     const parts = data.candidates?.[0]?.content?.parts || [];
     const textPart = parts.find(p => !p.thought) || parts[0];
-    const reply = textPart?.text || ('NO_TEXT: ' + JSON.stringify(data.candidates?.[0]));
+    const reply = textPart?.text || 'מצטער, אירעה שגיאה. נסה שוב.';
     res.json({ reply });
   } catch (err) {
     console.error('chat handler error:', err);
-    res.status(500).json({ error: 'CATCH: ' + err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 }
