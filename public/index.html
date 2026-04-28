@@ -35,6 +35,12 @@
           <label for="password">סיסמה</label>
           <input type="password" id="password" placeholder="סיסמה" required minlength="6" autocomplete="current-password">
         </div>
+        <div class="form-group remember-row" id="remember-row">
+          <label class="remember-label">
+            <input type="checkbox" id="remember-me" checked>
+            זכור אותי
+          </label>
+        </div>
         <button type="submit" class="btn btn-primary" id="submit-btn">התחבר</button>
       </form>
 
@@ -86,6 +92,7 @@
       document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
       document.getElementById('submit-btn').textContent = tab === 'login' ? 'התחבר' : 'צור חשבון';
       document.getElementById('password').autocomplete = tab === 'login' ? 'current-password' : 'new-password';
+      document.getElementById('remember-row').style.display = tab === 'login' ? 'block' : 'none';
       hideMessage();
     }
 
@@ -138,6 +145,7 @@
       hideMessage();
 
       if (currentTab === 'login') {
+        const remember = document.getElementById('remember-me').checked;
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) {
           if (error.message.toLowerCase().includes('email not confirmed')) {
@@ -148,6 +156,13 @@
           btn.disabled = false;
           btn.textContent = 'התחבר';
         } else {
+          localStorage.setItem('remember_me', remember ? 'true' : 'false');
+          if (!remember) {
+            // Move session from localStorage → sessionStorage so it clears on browser close
+            const key = 'sb-rcngaonfuljhtthsvpap-auth-token';
+            const data = localStorage.getItem(key);
+            if (data) { sessionStorage.setItem(key, data); localStorage.removeItem(key); }
+          }
           window.location.href = 'dashboard.html';
         }
       } else {
@@ -161,10 +176,9 @@
           btn.disabled = false;
           btn.textContent = 'צור חשבון';
         } else if (data.session) {
-          // Email confirmation disabled in Supabase — user is logged in immediately
+          localStorage.setItem('remember_me', 'true');
           window.location.href = 'onboarding.html';
         } else {
-          // Email confirmation enabled — ask user to verify
           showVerificationPending(email);
         }
       }
