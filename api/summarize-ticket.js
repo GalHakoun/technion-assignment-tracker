@@ -1,11 +1,11 @@
-import { createClient } from '@supabase/supabase-js';
+const { createClient } = require('@supabase/supabase-js');
 
 const sb = createClient(
-  process.env.SUPABASE_URL || 'https://rcngaonfuljhtthsvpap.supabase.co',
-  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY
+  'https://rcngaonfuljhtthsvpap.supabase.co',
+  process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbmdhb25mdWxqaHR0aHN2cGFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjUyMjMsImV4cCI6MjA5MjUwMTIyM30.5Ig-xpFdKGcK7U_l1jauGb8dSci6atmJoDng2p1A9N0'
 );
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const { messages, userId, saveConversation } = req.body;
@@ -46,19 +46,15 @@ ${conversationText}`;
     const data = await geminiRes.json();
     const summary = data.candidates?.[0]?.content?.parts?.[0]?.text || 'לא ניתן ליצור סיכום.';
 
-    // Detect type from summary
     const typeMatch = summary.match(/סוג:\s*(.+)/);
     const ticketType = typeMatch ? typeMatch[1].trim() : 'מעורב';
 
-    // Save ticket to Supabase
-    const ticketData = {
+    const { error: dbError } = await sb.from('feedback_tickets').insert({
       user_id: userId,
       summary,
       ticket_type: ticketType,
       conversation: saveConversation ? messages : null
-    };
-
-    const { error: dbError } = await sb.from('feedback_tickets').insert(ticketData);
+    });
     if (dbError) console.error('Supabase insert error:', dbError);
 
     res.json({ summary, ticketType });
@@ -66,4 +62,4 @@ ${conversationText}`;
     console.error('summarize-ticket error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
-}
+};
