@@ -1083,6 +1083,7 @@ body.dark .due-countdown.ok      { background: rgba(16,185,129,0.18); color: #6e
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  justify-content: space-between;
 }
 
 .pinned-card.urgency-overdue {
