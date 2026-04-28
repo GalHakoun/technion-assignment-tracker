@@ -1,9 +1,11 @@
 const { createClient } = require('@supabase/supabase-js');
+const { Resend } = require('resend');
 
 const sb = createClient(
   'https://rcngaonfuljhtthsvpap.supabase.co',
   process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbmdhb25mdWxqaHR0aHN2cGFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjUyMjMsImV4cCI6MjA5MjUwMTIyM30.5Ig-xpFdKGcK7U_l1jauGb8dSci6atmJoDng2p1A9N0'
 );
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
@@ -56,6 +58,15 @@ ${conversationText}`;
       conversation: saveConversation ? messages : null
     });
     if (dbError) console.error('Supabase insert error:', dbError);
+
+    if (process.env.RESEND_API_KEY) {
+      await resend.emails.send({
+        from: 'Technion Tracker <onboarding@resend.dev>',
+        to: 'gal.hakoun@gmail.com',
+        subject: `פידבק חדש: ${ticketType}`,
+        text: summary + (saveConversation ? `\n\n---\nשיחה מלאה:\n${conversationText}` : '')
+      }).catch(e => console.error('Resend error:', e));
+    }
 
     res.json({ summary, ticketType });
   } catch (err) {
