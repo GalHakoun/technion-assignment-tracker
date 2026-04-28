@@ -236,6 +236,16 @@
     </div>
   </div>
 
+  <!-- What's New modal -->
+  <div class="modal-overlay" id="whatsnew-overlay" style="display:none" onclick="if(event.target===this)closeWhatsNew()">
+    <div class="modal-card whatsnew-card">
+      <div class="whatsnew-icon">🎉</div>
+      <div class="modal-heading" id="whatsnew-title">מה חדש?</div>
+      <ul class="whatsnew-list" id="whatsnew-list"></ul>
+      <button class="btn-yes" style="width:100%;margin-top:1.25rem" onclick="closeWhatsNew()">הבנתי ←</button>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const { createClient } = supabase;
@@ -318,6 +328,7 @@
       await loadCourseNames();
       await loadAssignments();
       await maybeShowMorning();
+      await maybeShowWhatsNew();
       maybeAutoSync();
       setupRealtimeSync();
       setInterval(() => { if (!document.hidden) loadAssignments(); }, 30000);
@@ -364,6 +375,24 @@
       document.getElementById('morning-overlay').style.display = 'none';
       const todayKey = new Date().toISOString().slice(0, 10);
       localStorage.setItem(`morning_seen_${currentUser.id}`, todayKey);
+    }
+
+    async function maybeShowWhatsNew() {
+      try {
+        const res = await fetch('version.json?_=' + Date.now());
+        const { version, title, changes } = await res.json();
+        const seenKey = `seen_version_${currentUser.id}`;
+        if (localStorage.getItem(seenKey) === version) return;
+        document.getElementById('whatsnew-title').textContent = title;
+        const list = document.getElementById('whatsnew-list');
+        list.innerHTML = changes.map(c => `<li>${c}</li>`).join('');
+        document.getElementById('whatsnew-overlay').style.display = 'flex';
+        localStorage.setItem(seenKey, version);
+      } catch (_) {}
+    }
+
+    function closeWhatsNew() {
+      document.getElementById('whatsnew-overlay').style.display = 'none';
     }
 
     async function loadProfile() {

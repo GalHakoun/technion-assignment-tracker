@@ -1412,3 +1412,33 @@ body.dark .pinned-card.urgency-done {
     font-size: 0.8rem;
   }
 }
+
+/* ── What's New modal ── */
+.whatsnew-card {
+  max-width: 420px;
+  text-align: center;
+}
+
+.whatsnew-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.whatsnew-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  text-align: right;
+}
+
+.whatsnew-list li {
+  font-size: 0.9rem;
+  color: var(--text);
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.5;
+}
+
+.whatsnew-list li:last-child {
+  border-bottom: none;
+}
