@@ -420,6 +420,7 @@ input:focus {
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
+  padding-top: 0.875rem;
 }
 
 .assignment-card {
