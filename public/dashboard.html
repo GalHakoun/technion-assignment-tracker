@@ -136,70 +136,97 @@
       <div class="modal-heading">&#9881;&#65039; הגדרות</div>
 
       <!-- תצוגה -->
-      <div class="settings-section-title">תצוגה</div>
-      <div class="settings-row">
-        <span class="settings-label">מצב לילה</span>
-        <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()"></button>
-      </div>
-      <div class="settings-row">
-        <span class="settings-label">מיון ברירת מחדל</span>
-        <select class="settings-select" id="setting-sort" onchange="saveSetting('sort',this.value)">
-          <option value="date">לפי תאריך</option>
-          <option value="course">לפי קורס</option>
-          <option value="status">לפי סטטוס</option>
-        </select>
-      </div>
-      <div class="settings-row">
-        <span class="settings-label">צבע אזהרה לפני הגשה</span>
-        <select class="settings-select" id="setting-threshold" onchange="saveSetting('threshold',this.value)">
-          <option value="1">יום אחד</option>
-          <option value="3">3 ימים</option>
-          <option value="5">5 ימים</option>
-          <option value="7">שבוע</option>
-        </select>
+      <div class="settings-accordion">
+        <button class="settings-acc-header" onclick="toggleSettingsSection('acc-display')">
+          <span>&#127912; תצוגה</span>
+          <span class="settings-acc-arrow" id="arrow-acc-display">&#9660;</span>
+        </button>
+        <div class="settings-acc-body" id="acc-display" style="display:none">
+          <div class="settings-row">
+            <span class="settings-label">מצב לילה</span>
+            <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()"></button>
+          </div>
+          <div class="settings-row">
+            <span class="settings-label">מיון ברירת מחדל</span>
+            <select class="settings-select" id="setting-sort" onchange="saveSetting('sort',this.value)">
+              <option value="date">לפי תאריך</option>
+              <option value="course">לפי קורס</option>
+              <option value="status">לפי סטטוס</option>
+            </select>
+          </div>
+          <div class="settings-row" style="border-bottom:none">
+            <span class="settings-label">צבע אזהרה לפני הגשה</span>
+            <select class="settings-select" id="setting-threshold" onchange="saveSetting('threshold',this.value)">
+              <option value="1">יום אחד</option>
+              <option value="3">3 ימים</option>
+              <option value="5">5 ימים</option>
+              <option value="7">שבוע</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <!-- מטלות -->
-      <div class="settings-section-title">מטלות</div>
-      <div class="settings-row">
-        <span class="settings-label">הצג מטלות שפג תוקפן</span>
-        <button class="dark-toggle" id="overdue-toggle" onclick="toggleOverdue()"></button>
-      </div>
-      <div id="hidden-courses-section" style="display:none">
-        <div class="settings-row" style="border-top:none;padding-top:0">
-          <span class="settings-label">קורסים מוסתרים</span>
+      <div class="settings-accordion">
+        <button class="settings-acc-header" onclick="toggleSettingsSection('acc-tasks')">
+          <span>&#128203; מטלות</span>
+          <span class="settings-acc-arrow" id="arrow-acc-tasks">&#9660;</span>
+        </button>
+        <div class="settings-acc-body" id="acc-tasks" style="display:none">
+          <div class="settings-row" style="border-bottom:none">
+            <span class="settings-label">הצג מטלות שפג תוקפן</span>
+            <button class="dark-toggle" id="overdue-toggle" onclick="toggleOverdue()"></button>
+          </div>
+          <div id="hidden-courses-section" style="display:none">
+            <div class="settings-row" style="border-top:1px solid var(--border);border-bottom:none;margin-top:0.25rem">
+              <span class="settings-label">קורסים מוסתרים</span>
+            </div>
+            <div id="hidden-courses-list"></div>
+          </div>
         </div>
-        <div id="hidden-courses-list"></div>
       </div>
 
       <!-- סנכרון -->
-      <div class="settings-section-title">סנכרון</div>
-      <div class="settings-row">
-        <span class="settings-label">סנכרון אוטומטי</span>
-        <select class="settings-select" id="setting-sync-freq" onchange="saveSetting('syncFreq',this.value)">
-          <option value="daily">פעם ביום</option>
-          <option value="login">בכל כניסה</option>
-          <option value="manual">ידני בלבד</option>
-        </select>
-      </div>
-      <div class="form-group" style="margin-top:0.75rem">
-        <label for="settings-moodle-url">קישור Moodle iCal</label>
-        <input type="url" id="settings-moodle-url" dir="ltr" placeholder="https://moodle25.technion.ac.il/calendar/export_execute.php?...">
-      </div>
-      <div id="settings-message" style="display:none" class="message"></div>
-      <div class="modal-actions" style="margin-top:0.75rem">
-        <button class="btn-yes" onclick="saveSettings()">שמור קישור</button>
-        <button class="btn-no" onclick="closeSettings()">סגור</button>
+      <div class="settings-accordion">
+        <button class="settings-acc-header" onclick="toggleSettingsSection('acc-sync')">
+          <span>&#128260; סנכרון</span>
+          <span class="settings-acc-arrow" id="arrow-acc-sync">&#9660;</span>
+        </button>
+        <div class="settings-acc-body" id="acc-sync" style="display:none">
+          <div class="settings-row" style="border-bottom:none">
+            <span class="settings-label">סנכרון אוטומטי</span>
+            <select class="settings-select" id="setting-sync-freq" onchange="saveSetting('syncFreq',this.value)">
+              <option value="daily">פעם ביום</option>
+              <option value="login">בכל כניסה</option>
+              <option value="manual">ידני בלבד</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-top:0.75rem">
+            <label for="settings-moodle-url">קישור Moodle iCal</label>
+            <input type="url" id="settings-moodle-url" dir="ltr" placeholder="https://moodle25.technion.ac.il/calendar/export_execute.php?...">
+          </div>
+          <div id="settings-message" style="display:none" class="message"></div>
+          <button class="btn-yes" style="width:100%;margin-top:0.75rem" onclick="saveSettings()">שמור קישור</button>
+        </div>
       </div>
 
       <!-- חשבון -->
-      <div class="settings-section-title">חשבון</div>
-      <div class="form-group">
-        <label for="new-password">סיסמה חדשה</label>
-        <input type="password" id="new-password" placeholder="לפחות 6 תווים" minlength="6">
+      <div class="settings-accordion">
+        <button class="settings-acc-header" onclick="toggleSettingsSection('acc-account')">
+          <span>&#128274; חשבון</span>
+          <span class="settings-acc-arrow" id="arrow-acc-account">&#9660;</span>
+        </button>
+        <div class="settings-acc-body" id="acc-account" style="display:none">
+          <div class="form-group" style="margin-top:0.5rem">
+            <label for="new-password">סיסמה חדשה</label>
+            <input type="password" id="new-password" placeholder="לפחות 6 תווים" minlength="6">
+          </div>
+          <div id="password-message" style="display:none" class="message"></div>
+          <button class="btn-yes" style="margin-top:0.5rem;width:100%" onclick="changePassword()">עדכן סיסמה</button>
+        </div>
       </div>
-      <div id="password-message" style="display:none" class="message"></div>
-      <button class="btn-yes" style="margin-top:0.5rem;width:100%" onclick="changePassword()">עדכן סיסמה</button>
+
+      <button class="btn-no" style="width:100%;margin-top:1rem" onclick="closeSettings()">סגור</button>
     </div>
   </div>
 
@@ -411,6 +438,15 @@
         document.getElementById('new-password').value = '';
       }
       msg.style.display = 'block';
+    }
+
+    function toggleSettingsSection(id) {
+      const body = document.getElementById(id);
+      const arrow = document.getElementById('arrow-' + id);
+      if (!body) return;
+      const isOpen = body.style.display !== 'none';
+      body.style.display = isOpen ? 'none' : 'block';
+      if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
     }
 
     function closeSettings() {

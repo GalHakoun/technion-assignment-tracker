@@ -610,16 +610,44 @@ body.dark .due-countdown.ok      { background: rgba(16,185,129,0.18); color: #6e
   overflow-y: auto;
 }
 
-.settings-section-title {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+/* ── Settings accordion ── */
+
+.settings-accordion {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-top: 0.625rem;
+  overflow: hidden;
+}
+
+.settings-acc-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+  background: var(--bg);
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.settings-acc-header:hover { background: var(--border); }
+
+.settings-acc-arrow {
+  font-size: 0.65rem;
   color: var(--text-muted);
-  margin-top: 1.25rem;
-  margin-bottom: 0.25rem;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid var(--border);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.settings-acc-body {
+  padding: 0.25rem 1rem 0.875rem;
+  background: var(--card-bg);
+  border-top: 1px solid var(--border);
 }
 
 .settings-row {
