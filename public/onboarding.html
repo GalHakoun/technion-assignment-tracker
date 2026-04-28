@@ -189,6 +189,37 @@
 
     .btn-next:hover { background: var(--accent-dark); }
     .btn-next:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* numbered annotation badge inside a ring */
+    .ann-num {
+      position: absolute;
+      top: -12px;
+      right: -12px;
+      width: 22px;
+      height: 22px;
+      background: #ef4444;
+      color: #fff;
+      border-radius: 50%;
+      font-size: 0.72rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    }
+
+    /* numbered step list below the image */
+    .ann-list {
+      margin: 0.75rem 1.25rem 0;
+      padding: 0;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.75;
+      direction: rtl;
+    }
+
+    .ann-list li { margin-bottom: 0.2rem; }
+    .ann-list strong { color: var(--text); }
   </style>
 </head>
 <body>
@@ -201,7 +232,6 @@
     <div class="wizard-dot" id="dot-1"></div>
     <div class="wizard-dot" id="dot-2"></div>
     <div class="wizard-dot" id="dot-3"></div>
-    <div class="wizard-dot" id="dot-4"></div>
   </div>
 
   <!-- ── Slide 0: Welcome ── -->
@@ -223,7 +253,7 @@
   <!-- ── Slide 1: Login to Moodle ── -->
   <div class="slide" id="slide-1">
     <div class="slide-card">
-      <div class="slide-step-label">שלב 1 מתוך 5</div>
+      <div class="slide-step-label">שלב 1 מתוך 4</div>
       <div class="slide-title">התחברו ל-Moodle</div>
       <div class="slide-desc">
         היכנסו ל-<strong>moodle25.technion.ac.il</strong> והתחברו עם <strong>שם המשתמש והסיסמה של הטכניון</strong> שלכם.
@@ -239,7 +269,7 @@
   <!-- ── Slide 2: Open export page ── -->
   <div class="slide" id="slide-2">
     <div class="slide-card">
-      <div class="slide-step-label">שלב 2 מתוך 5</div>
+      <div class="slide-step-label">שלב 2 מתוך 4</div>
       <div class="slide-title">פתחו את דף ייצוא לוח השנה</div>
       <div class="slide-desc">
         לחצו על הכפתור למטה כדי לפתוח את <strong>דף ייצוא לוח השנה</strong> ב-Moodle. הדף ייפתח בלשונית חדשה.
@@ -252,63 +282,40 @@
     </div>
   </div>
 
-  <!-- ── Slide 3: Select כל האירועים ── -->
+  <!-- ── Slide 3: All Moodle export settings (merged) ── -->
   <div class="slide" id="slide-3">
     <div class="slide-card">
-      <div class="slide-step-label">שלב 3 מתוך 5</div>
-      <div class="slide-title">בחרו "כל האירועים"</div>
-      <div class="slide-desc">
-        תחת <strong>ארועים ליצוא</strong>, בחרו <strong>כל האירועים</strong>.
-      </div>
+      <div class="slide-step-label">שלב 3 מתוך 4</div>
+      <div class="slide-title">הגדירו את ייצוא לוח השנה</div>
+      <div class="slide-desc">בצעו את שלושת הפעולות המסומנות בדף הייצוא:</div>
       <div class="annotation-wrap">
-        <img src="moodle-step3.png" alt="דף ייצוא Moodle">
+        <img src="moodle-step345.png" alt="דף ייצוא Moodle">
+        <div class="annotation-ring" style="top:8%;right:3%;width:92%;height:21%">
+          <span class="ann-num">1</span>
+        </div>
+        <div class="annotation-ring" style="top:36%;right:3%;width:92%;height:21%">
+          <span class="ann-num">2</span>
+        </div>
+        <div class="annotation-ring" style="top:64%;right:3%;width:55%;height:14%">
+          <span class="ann-num">3</span>
+        </div>
       </div>
+      <ol class="ann-list">
+        <li>תחת <strong>ארועים לייצוא</strong> — בחרו <strong>כל האירועים</strong></li>
+        <li>תחת <strong>מסגרת זמן</strong> — בחרו <strong>60 הימים שחלפו ו-60 הימים הבאים</strong></li>
+        <li>לחצו על הכפתור הירוק <strong>השג את כתובת ה-URL</strong> והעתיקו את הקישור</li>
+      </ol>
       <div class="wizard-nav">
         <button class="btn-back" onclick="goTo(2)">← חזור</button>
-        <button class="btn-next" onclick="goTo(4)">בחרתי — המשך ←</button>
+        <button class="btn-next" onclick="goTo(4)">העתקתי — המשך ←</button>
       </div>
     </div>
   </div>
 
-  <!-- ── Slide 4: Select time range ── -->
+  <!-- ── Slide 4: Paste URL ── -->
   <div class="slide" id="slide-4">
     <div class="slide-card">
-      <div class="slide-step-label">שלב 4 מתוך 5</div>
-      <div class="slide-title">בחרו את מסגרת הזמן</div>
-      <div class="slide-desc">
-        תחת <strong>מסגרת זמן</strong>, בחרו <strong>60 הימים שזה עתה חלפו ו60 הימים הבאים</strong>.
-      </div>
-      <div class="annotation-wrap">
-        <img src="moodle-step4.png" alt="דף ייצוא Moodle">
-      </div>
-      <div class="wizard-nav">
-        <button class="btn-back" onclick="goTo(3)">← חזור</button>
-        <button class="btn-next" onclick="goTo(5)">בחרתי — המשך ←</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Slide 5: Click Get URL button ── -->
-  <div class="slide" id="slide-5">
-    <div class="slide-card">
-      <div class="slide-step-label">שלב 5 מתוך 5</div>
-      <div class="slide-title">לחצו על "השג את כתובת ה-URL"</div>
-      <div class="slide-desc">
-        לחצו על הכפתור הירוק <strong>השג את כתובת ה-URL של לוח השנה</strong> והעתיקו את הקישור שמופיע.
-      </div>
-      <div class="annotation-wrap">
-        <img src="moodle-step5.png" alt="דף ייצוא Moodle">
-      </div>
-      <div class="wizard-nav">
-        <button class="btn-back" onclick="goTo(4)">← חזור</button>
-        <button class="btn-next" onclick="goTo(6)">העתקתי — המשך ←</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Slide 6: Paste URL ── -->
-  <div class="slide" id="slide-6">
-    <div class="slide-card">
+      <div class="slide-step-label">שלב 4 מתוך 4</div>
       <div class="slide-title">הדביקו את הקישור</div>
       <div class="slide-desc">
         הדביקו את הקישור שהעתקתם — מתחיל ב-<span dir="ltr">https://moodle25...</span>
@@ -324,7 +331,7 @@
       </div>
       <div id="onboarding-message" style="display:none" class="message"></div>
       <div class="wizard-nav">
-        <button class="btn-back" onclick="goTo(5)">← חזור</button>
+        <button class="btn-back" onclick="goTo(3)">← חזור</button>
         <button class="btn-next" id="submit-btn" onclick="completeSetup()">התחל לעקוב ←</button>
       </div>
     </div>
@@ -352,9 +359,9 @@
 
   function updateDots() {
     const wrap = document.getElementById('wizard-dots');
-    const isStep = current >= 1 && current <= 5;
+    const isStep = current >= 1 && current <= 4;
     wrap.classList.toggle('visible', isStep);
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       document.getElementById('dot-' + i).classList.toggle('active', i === current - 1);
     }
   }
