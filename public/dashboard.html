@@ -1388,11 +1388,11 @@
         if (data.reply) {
           appendBotMessage(data.reply);
         } else {
-          appendBotMessage('מצטער, אירעה שגיאה. נסה שוב.');
+          appendBotMessage('שגיאה: ' + (data.error || JSON.stringify(data)));
         }
       } catch (err) {
         removeTyping();
-        appendBotMessage('מצטער, אירעה שגיאה. נסה שוב.');
+        appendBotMessage('שגיאת חיבור: ' + err.message);
       }
 
       input.disabled = false;

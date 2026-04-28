@@ -60,15 +60,15 @@ module.exports = async function handler(req, res) {
     if (!response.ok) {
       const detail = data?.error?.message || data?.error?.status || JSON.stringify(data);
       console.error('Gemini error:', detail);
-      return res.status(502).json({ error: detail });
+      return res.status(502).json({ error: 'GEMINI_ERR: ' + detail });
     }
 
     const parts = data.candidates?.[0]?.content?.parts || [];
     const textPart = parts.find(p => !p.thought) || parts[0];
-    const reply = textPart?.text || 'מצטער, אירעה שגיאה. נסה שוב.';
+    const reply = textPart?.text || ('NO_TEXT: ' + JSON.stringify(data.candidates?.[0]));
     res.json({ reply });
   } catch (err) {
     console.error('chat handler error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'CATCH: ' + err.message });
   }
 }
