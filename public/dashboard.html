@@ -1102,6 +1102,11 @@
       closeCardMenu();
     });
 
+    // Refresh immediately whenever the user switches back to this tab
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && currentUser) loadAssignments();
+    });
+
     init();
   </script>
   <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
