@@ -18,6 +18,7 @@
     <div class="navbar-right">
       <button class="btn-logout" onclick="logout()">התנתק</button>
       <button class="btn-settings" onclick="openSettings()" title="Settings">&#9881;&#65039;</button>
+      <button class="btn-share" onclick="openShare()" title="שתף">שתף</button>
     </div>
     <div class="navbar-brand"><img src="logo.png" alt="Technion Tracker" class="navbar-logo"> Technion Tracker</div>
   </nav>
@@ -236,6 +237,33 @@
     </div>
   </div>
 
+  <!-- Share modal -->
+  <div class="modal-overlay" id="share-overlay" style="display:none" onclick="if(event.target===this)closeShare()">
+    <div class="modal-card share-card">
+      <div class="modal-heading">📤 שתף את האפליקציה</div>
+      <p class="share-desc">שתפו את Technion Tracker עם חברים לקורס</p>
+      <div class="share-options">
+        <button class="share-btn share-whatsapp" onclick="shareWhatsApp()">
+          <span class="share-icon">💬</span>
+          <span>WhatsApp</span>
+        </button>
+        <button class="share-btn share-email" onclick="shareEmail()">
+          <span class="share-icon">📧</span>
+          <span>אימייל</span>
+        </button>
+        <button class="share-btn share-telegram" onclick="shareTelegram()">
+          <span class="share-icon">✈️</span>
+          <span>Telegram</span>
+        </button>
+        <button class="share-btn share-copy" id="copy-btn" onclick="copyLink()">
+          <span class="share-icon">🔗</span>
+          <span id="copy-label">העתק קישור</span>
+        </button>
+      </div>
+      <button class="btn-yes" style="width:100%;margin-top:1.25rem" onclick="closeShare()">סגור</button>
+    </div>
+  </div>
+
   <!-- What's New modal -->
   <div class="modal-overlay" id="whatsnew-overlay" style="display:none" onclick="if(event.target===this)closeWhatsNew()">
     <div class="modal-card whatsnew-card">
@@ -395,6 +423,46 @@
 
     function closeWhatsNew() {
       document.getElementById('whatsnew-overlay').style.display = 'none';
+    }
+
+    function openShare() { document.getElementById('share-overlay').style.display = 'flex'; }
+    function closeShare() { document.getElementById('share-overlay').style.display = 'none'; }
+
+    function getShareText() {
+      const url = window.location.origin;
+      return `היי! אני משתמש ב-Technion Tracker — לוח מטלות חכם לסטודנטים מהטכניון שמסנכרן אוטומטית עם Moodle. כניסה: ${url}`;
+    }
+
+    function shareWhatsApp() {
+      window.open('https://wa.me/?text=' + encodeURIComponent(getShareText()), '_blank');
+    }
+
+    function shareEmail() {
+      const subject = encodeURIComponent('Technion Tracker — לוח מטלות לסטודנטים');
+      const body = encodeURIComponent(getShareText());
+      window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+    }
+
+    function shareTelegram() {
+      const url = encodeURIComponent(window.location.origin);
+      const text = encodeURIComponent('היי! אני משתמש ב-Technion Tracker — לוח מטלות חכם לסטודנטים מהטכניון שמסנכרן אוטומטית עם Moodle.');
+      window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
+    }
+
+    async function copyLink() {
+      try {
+        await navigator.clipboard.writeText(window.location.origin);
+      } catch (_) {
+        const ta = document.createElement('textarea');
+        ta.value = window.location.origin;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      const label = document.getElementById('copy-label');
+      label.textContent = '✓ הועתק!';
+      setTimeout(() => { label.textContent = 'העתק קישור'; }, 2000);
     }
 
     async function loadProfile() {
