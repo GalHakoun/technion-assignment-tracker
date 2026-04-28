@@ -41,13 +41,14 @@ ${conversationText}`;
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: summaryPrompt }] }],
-          generationConfig: { thinkingConfig: { thinkingBudget: 0 } }
         })
       }
     );
 
     const data = await geminiRes.json();
-    const summary = data.candidates?.[0]?.content?.parts?.[0]?.text || 'לא ניתן ליצור סיכום.';
+    const parts = data.candidates?.[0]?.content?.parts || [];
+    const textPart = parts.find(p => !p.thought) || parts[0];
+    const summary = textPart?.text || 'לא ניתן ליצור סיכום.';
 
     const typeMatch = summary.match(/סוג:\s*(.+)/);
     const ticketType = typeMatch ? typeMatch[1].trim() : 'מעורב';

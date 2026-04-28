@@ -51,7 +51,6 @@ module.exports = async function handler(req, res) {
               parts: [{ text: m.content }]
             }))
           ],
-          generationConfig: { thinkingConfig: { thinkingBudget: 0 } }
         })
       }
     );
@@ -64,7 +63,9 @@ module.exports = async function handler(req, res) {
       return res.status(502).json({ error: detail });
     }
 
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'מצטער, אירעה שגיאה. נסה שוב.';
+    const parts = data.candidates?.[0]?.content?.parts || [];
+    const textPart = parts.find(p => !p.thought) || parts[0];
+    const reply = textPart?.text || 'מצטער, אירעה שגיאה. נסה שוב.';
     res.json({ reply });
   } catch (err) {
     console.error('chat handler error:', err);
