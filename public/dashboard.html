@@ -1279,6 +1279,170 @@
 
     init();
   </script>
+  <!-- ── Chat Bot ── -->
+  <button class="chat-fab" id="chat-fab" onclick="toggleChat()" title="צ'אט">
+    <span class="chat-fab-icon" id="chat-fab-icon">💬</span>
+  </button>
+
+  <div class="chat-window" id="chat-window" style="display:none">
+    <div class="chat-header">
+      <div class="chat-header-info">
+        <div class="chat-avatar">🤖</div>
+        <div>
+          <div class="chat-header-name">Technion Bot</div>
+          <div class="chat-header-sub">שאלות, פידבק ורעיונות</div>
+        </div>
+      </div>
+      <button class="chat-close" onclick="toggleChat()">✕</button>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-save-bar" id="chat-save-bar" style="display:none">
+      <span class="chat-save-text">לשמור את השיחה?</span>
+      <button class="chat-save-btn" onclick="endChat(true)">כן, שמור</button>
+      <button class="chat-save-btn chat-save-no" onclick="endChat(false)">לא</button>
+    </div>
+    <div class="chat-input-row" id="chat-input-row">
+      <input class="chat-input" id="chat-input" type="text" placeholder="כתוב הודעה..." dir="rtl"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}">
+      <button class="chat-send" id="chat-send" onclick="sendMessage()">&#10148;</button>
+    </div>
+  </div>
+
+  <script>
+    // ── Chat Bot ──
+    let chatMessages = [];
+    let chatOpen = false;
+    let chatEnded = false;
+    const GREETING = 'היי! אני הבוט של Technion Tracker 👋\nאני כאן לעזור עם שאלות, פידבק או רעיונות לפיצ\'רים חדשים.\nבמה אוכל לעזור?';
+
+    function toggleChat() {
+      chatOpen = !chatOpen;
+      const win = document.getElementById('chat-window');
+      win.style.display = chatOpen ? 'flex' : 'none';
+      document.getElementById('chat-fab-icon').textContent = chatOpen ? '✕' : '💬';
+      if (chatOpen && chatMessages.length === 0) startChat();
+      if (chatOpen) setTimeout(() => document.getElementById('chat-input').focus(), 100);
+    }
+
+    function startChat() {
+      chatMessages = [];
+      chatEnded = false;
+      document.getElementById('chat-messages').innerHTML = '';
+      document.getElementById('chat-save-bar').style.display = 'none';
+      document.getElementById('chat-input-row').style.display = 'flex';
+      appendBotMessage(GREETING);
+    }
+
+    function appendBotMessage(text) {
+      chatMessages.push({ role: 'assistant', content: text });
+      renderMessage('assistant', text);
+    }
+
+    function renderMessage(role, text) {
+      const wrap = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = 'chat-msg chat-msg-' + (role === 'user' ? 'user' : 'bot');
+      div.textContent = text;
+      wrap.appendChild(div);
+      wrap.scrollTop = wrap.scrollHeight;
+    }
+
+    function renderTyping() {
+      const wrap = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = 'chat-msg chat-msg-bot chat-typing';
+      div.id = 'chat-typing';
+      div.innerHTML = '<span></span><span></span><span></span>';
+      wrap.appendChild(div);
+      wrap.scrollTop = wrap.scrollHeight;
+    }
+
+    function removeTyping() {
+      const el = document.getElementById('chat-typing');
+      if (el) el.remove();
+    }
+
+    async function sendMessage() {
+      if (chatEnded) return;
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      input.disabled = true;
+      document.getElementById('chat-send').disabled = true;
+
+      chatMessages.push({ role: 'user', content: text });
+      renderMessage('user', text);
+      renderTyping();
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: chatMessages })
+        });
+        const data = await res.json();
+        removeTyping();
+        appendBotMessage(data.reply || 'מצטער, אירעה שגיאה.');
+      } catch (_) {
+        removeTyping();
+        appendBotMessage('מצטער, אירעה שגיאה בחיבור. נסה שוב.');
+      }
+
+      input.disabled = false;
+      document.getElementById('chat-send').disabled = false;
+      input.focus();
+
+      // After 5 user messages, offer to end
+      const userMsgCount = chatMessages.filter(m => m.role === 'user').length;
+      if (userMsgCount >= 5 && !chatEnded) offerEndChat();
+    }
+
+    function offerEndChat() {
+      chatEnded = true;
+      document.getElementById('chat-input-row').style.display = 'none';
+      document.getElementById('chat-save-bar').style.display = 'flex';
+      appendBotMessage('תודה רבה על הפידבק! 🙏\nהאם תרצה לשמור את השיחה הזו?');
+    }
+
+    async function endChat(save) {
+      document.getElementById('chat-save-bar').style.display = 'none';
+      appendBotMessage('מעבד...');
+
+      try {
+        const res = await fetch('/api/summarize-ticket', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: chatMessages.filter(m => m.content !== 'מעבד...'),
+            userId: currentUser.id,
+            saveConversation: save
+          })
+        });
+        const data = await res.json();
+        removeTyping();
+        // Remove the "מעבד..." message
+        const msgs = document.getElementById('chat-messages');
+        const last = msgs.lastElementChild;
+        if (last && last.textContent === 'מעבד...') last.remove();
+        chatMessages = chatMessages.filter(m => m.content !== 'מעבד...');
+
+        appendBotMessage('הפידבק שלך נשמר ונשלח לצוות הפיתוח. תודה! 🎉');
+      } catch (_) {
+        appendBotMessage('הפידבק שלך חשוב לנו — אך אירעה שגיאה בשמירה. נסה שוב מאוחר יותר.');
+      }
+
+      // Add restart button
+      const wrap = document.getElementById('chat-messages');
+      const btn = document.createElement('button');
+      btn.className = 'chat-restart';
+      btn.textContent = 'התחל שיחה חדשה';
+      btn.onclick = startChat;
+      wrap.appendChild(btn);
+      wrap.scrollTop = wrap.scrollHeight;
+    }
+  </script>
+
   <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 </body>
 </html>
