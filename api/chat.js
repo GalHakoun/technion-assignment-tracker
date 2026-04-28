@@ -55,8 +55,9 @@ module.exports = async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Gemini error:', data);
-      return res.status(502).json({ error: 'Gemini API error', detail: data });
+      const detail = data?.error?.message || data?.error?.status || JSON.stringify(data);
+      console.error('Gemini error:', detail);
+      return res.status(502).json({ error: detail });
     }
 
     const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'מצטער, אירעה שגיאה. נסה שוב.';
