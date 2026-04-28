@@ -1383,10 +1383,14 @@
         });
         const data = await res.json();
         removeTyping();
-        appendBotMessage(data.reply || 'מצטער, אירעה שגיאה.');
-      } catch (_) {
+        if (data.reply) {
+          appendBotMessage(data.reply);
+        } else {
+          appendBotMessage('שגיאה: ' + (data.error || data.detail || JSON.stringify(data)));
+        }
+      } catch (err) {
         removeTyping();
-        appendBotMessage('מצטער, אירעה שגיאה בחיבור. נסה שוב.');
+        appendBotMessage('שגיאת חיבור: ' + err.message);
       }
 
       input.disabled = false;
