@@ -1386,11 +1386,11 @@
         if (data.reply) {
           appendBotMessage(data.reply);
         } else {
-          appendBotMessage('שגיאה: ' + (data.error || data.detail || JSON.stringify(data)));
+          appendBotMessage('מצטער, אירעה שגיאה. נסה שוב.');
         }
       } catch (err) {
         removeTyping();
-        appendBotMessage('שגיאת חיבור: ' + err.message);
+        appendBotMessage('מצטער, אירעה שגיאה. נסה שוב.');
       }
 
       input.disabled = false;
