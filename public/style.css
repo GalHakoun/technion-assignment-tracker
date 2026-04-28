@@ -677,6 +677,27 @@ body.dark .due-countdown.ok      { background: rgba(16,185,129,0.18); color: #6e
 
 .settings-select:focus { outline: none; border-color: var(--accent); }
 
+.threshold-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.custom-threshold-input {
+  width: 68px;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.83rem;
+  color: var(--text);
+  background: var(--bg);
+  font-family: inherit;
+  outline: none;
+  text-align: center;
+}
+
+.custom-threshold-input:focus { border-color: var(--accent); }
+
 .modal-heading {
   font-size: 1rem;
   font-weight: 600;

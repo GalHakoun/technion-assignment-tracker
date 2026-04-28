@@ -156,12 +156,18 @@
           </div>
           <div class="settings-row" style="border-bottom:none">
             <span class="settings-label">צבע אזהרה לפני הגשה</span>
-            <select class="settings-select" id="setting-threshold" onchange="saveSetting('threshold',this.value)">
-              <option value="1">יום אחד</option>
-              <option value="3">3 ימים</option>
-              <option value="5">5 ימים</option>
-              <option value="7">שבוע</option>
-            </select>
+            <div class="threshold-wrap">
+              <select class="settings-select" id="setting-threshold" onchange="onThresholdChange(this.value)">
+                <option value="1">יום אחד</option>
+                <option value="3">3 ימים</option>
+                <option value="5">5 ימים</option>
+                <option value="7">שבוע</option>
+                <option value="custom">מותאם אישית...</option>
+              </select>
+              <input type="number" id="custom-threshold" class="custom-threshold-input"
+                     min="1" max="365" placeholder="ימים" style="display:none"
+                     oninput="saveCustomThreshold(this.value)">
+            </div>
           </div>
         </div>
       </div>
@@ -377,7 +383,16 @@
       document.getElementById('settings-overlay').style.display = 'flex';
       document.getElementById('dark-toggle').classList.toggle('on', document.body.classList.contains('dark'));
       document.getElementById('setting-sort').value = currentSort;
-      document.getElementById('setting-threshold').value = String(dueSoonThreshold);
+      const presets = ['1', '3', '5', '7'];
+      const storedThreshold = String(dueSoonThreshold);
+      if (presets.includes(storedThreshold)) {
+        document.getElementById('setting-threshold').value = storedThreshold;
+        document.getElementById('custom-threshold').style.display = 'none';
+      } else {
+        document.getElementById('setting-threshold').value = 'custom';
+        document.getElementById('custom-threshold').style.display = 'inline-block';
+        document.getElementById('custom-threshold').value = storedThreshold;
+      }
       document.getElementById('overdue-toggle').classList.toggle('on', showOverdue);
       document.getElementById('setting-sync-freq').value = localStorage.getItem(syncFreqKey()) || 'daily';
       document.getElementById('new-password').value = '';
@@ -409,6 +424,26 @@
         renderAssignments(lastAssignments);
       } else if (key === 'syncFreq') {
         localStorage.setItem(syncFreqKey(), value);
+      }
+    }
+
+    function onThresholdChange(value) {
+      const customInput = document.getElementById('custom-threshold');
+      if (value === 'custom') {
+        customInput.style.display = 'inline-block';
+        customInput.focus();
+      } else {
+        customInput.style.display = 'none';
+        saveSetting('threshold', value);
+      }
+    }
+
+    function saveCustomThreshold(value) {
+      const num = parseInt(value);
+      if (num > 0 && num <= 365) {
+        dueSoonThreshold = num;
+        localStorage.setItem(thresholdKey(), String(num));
+        renderAssignments(lastAssignments);
       }
     }
 
