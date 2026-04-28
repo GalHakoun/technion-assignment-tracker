@@ -37,26 +37,35 @@ module.exports = async function handler(req, res) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
 
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            { role: 'user',  parts: [{ text: SYSTEM_PROMPT }] },
-            { role: 'model', parts: [{ text: 'הבנתי, אני מוכן לעזור.' }] },
-            ...messages.map(m => ({
-              role: m.role === 'assistant' ? 'model' : 'user',
-              parts: [{ text: m.content }]
-            }))
-          ],
-        })
-      }
-    );
+  const geminiBody = JSON.stringify({
+    contents: [
+      { role: 'user',  parts: [{ text: SYSTEM_PROMPT }] },
+      { role: 'model', parts: [{ text: 'הבנתי, אני מוכן לעזור.' }] },
+      ...messages.map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }]
+      }))
+    ],
+  });
 
-    const data = await response.json();
+  const callGemini = () => fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: geminiBody }
+  );
+
+  try {
+    let response = await callGemini();
+    let data = await response.json();
+
+    if (response.status === 429) {
+      const retryMs = (() => {
+        const m = (data?.error?.message || '').match(/retry in ([\d.]+)s/i);
+        return m ? Math.ceil(parseFloat(m[1]) * 1000) + 500 : 15000;
+      })();
+      await new Promise(r => setTimeout(r, Math.min(retryMs, 30000)));
+      response = await callGemini();
+      data = await response.json();
+    }
 
     if (!response.ok) {
       const detail = data?.error?.message || data?.error?.status || JSON.stringify(data);
