@@ -1399,6 +1399,10 @@
       document.getElementById('chat-send').disabled = false;
       input.focus();
 
+      const userMsgCount = chatMessages.filter(m => m.role === 'user').length;
+      if (userMsgCount === 5 && !chatEnded) {
+        appendBotMessage('נראה שדיברנו על מספר נושאים 😊\nכשתרצה לסיים, לחץ על כפתור "סיכום שיחה" כדי לשלוח את הפידבק שלך.');
+      }
     }
 
     function offerEndChat() {
@@ -1434,9 +1438,13 @@
         if (last && last.textContent === 'מעבד...') last.remove();
         chatMessages = chatMessages.filter(m => m.content !== 'מעבד...');
 
-        appendBotMessage('הפידבק שלך נשמר ונשלח לצוות הפיתוח. תודה! 🎉');
-      } catch (_) {
-        appendBotMessage('הפידבק שלך חשוב לנו — אך אירעה שגיאה בשמירה. נסה שוב מאוחר יותר.');
+        if (data.error) {
+          appendBotMessage('שגיאה בסיכום: ' + data.error);
+        } else {
+          appendBotMessage('הפידבק שלך נשמר ונשלח לצוות הפיתוח. תודה! 🎉');
+        }
+      } catch (e) {
+        appendBotMessage('שגיאת חיבור בסיכום: ' + e.message);
       }
 
       // Add restart button

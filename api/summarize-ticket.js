@@ -46,6 +46,11 @@ ${conversationText}`;
     );
 
     const data = await geminiRes.json();
+    if (!geminiRes.ok) {
+      const detail = data?.error?.message || JSON.stringify(data);
+      console.error('Gemini summarize error:', detail);
+      return res.status(502).json({ error: detail });
+    }
     const parts = data.candidates?.[0]?.content?.parts || [];
     const textPart = parts.find(p => !p.thought) || parts[0];
     const summary = textPart?.text || 'לא ניתן ליצור סיכום.';
