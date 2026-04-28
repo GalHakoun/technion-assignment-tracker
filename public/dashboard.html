@@ -1388,11 +1388,11 @@
         if (data.reply) {
           appendBotMessage(data.reply);
         } else {
-          appendBotMessage('שגיאה: ' + (data.error || JSON.stringify(data)));
+          appendBotMessage('מצטער, אירעה שגיאה. נסה שוב.');
         }
       } catch (err) {
         removeTyping();
-        appendBotMessage('שגיאת חיבור: ' + err.message);
+        appendBotMessage('מצטער, אירעה שגיאה. נסה שוב.');
       }
 
       input.disabled = false;
@@ -1438,13 +1438,9 @@
         if (last && last.textContent === 'מעבד...') last.remove();
         chatMessages = chatMessages.filter(m => m.content !== 'מעבד...');
 
-        if (data.error) {
-          appendBotMessage('שגיאה בסיכום: ' + data.error);
-        } else {
-          appendBotMessage('הפידבק שלך נשמר ונשלח לצוות הפיתוח. תודה! 🎉');
-        }
-      } catch (e) {
-        appendBotMessage('שגיאת חיבור בסיכום: ' + e.message);
+        appendBotMessage('הפידבק שלך נשמר ונשלח לצוות הפיתוח. תודה! 🎉');
+      } catch (_) {
+        appendBotMessage('הפידבק שלך חשוב לנו — אך אירעה שגיאה בשמירה. נסה שוב מאוחר יותר.');
       }
 
       // Add restart button
