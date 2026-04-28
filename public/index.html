@@ -37,6 +37,21 @@
         </div>
         <button type="submit" class="btn btn-primary" id="submit-btn">התחבר</button>
       </form>
+
+      <!-- Email verification pending screen -->
+      <div id="verify-pending" style="display:none;text-align:center;padding:0.5rem 0">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem">📧</div>
+        <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:0.5rem">בדוק את האימייל שלך</div>
+        <div style="font-size:0.875rem;color:var(--text-muted);line-height:1.65;margin-bottom:1.25rem">
+          שלחנו קישור אימות אל<br>
+          <strong id="verify-email-addr" style="color:var(--text);direction:ltr;display:inline-block"></strong><br>
+          לחץ על הקישור להפעלת החשבון.
+        </div>
+        <button onclick="resendVerification()" class="btn btn-primary" id="resend-btn">שלח שוב</button>
+        <div style="margin-top:0.875rem">
+          <button onclick="backToLogin()" style="background:none;border:none;color:var(--accent);font-size:0.875rem;cursor:pointer;text-decoration:underline;font-family:inherit">חזור להתחברות</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -49,10 +64,21 @@
     );
 
     let currentTab = 'login';
+    let pendingEmail = '';
 
-    sb.auth.getSession().then(({ data: { session } }) => {
+    async function init() {
+      // Handle email verification redirect (PKCE code exchange)
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('code')) {
+        const { error } = await sb.auth.exchangeCodeForSession(window.location.href);
+        if (!error) { window.location.href = 'dashboard.html'; return; }
+      }
+      // Check for existing valid session (also handles implicit-flow hash tokens)
+      const { data: { session } } = await sb.auth.getSession();
       if (session) window.location.href = 'dashboard.html';
-    });
+    }
+
+    init();
 
     function switchTab(tab) {
       currentTab = tab;
@@ -74,6 +100,33 @@
       document.getElementById('message').style.display = 'none';
     }
 
+    function showVerificationPending(email) {
+      pendingEmail = email;
+      document.getElementById('auth-form').style.display = 'none';
+      document.getElementById('message').style.display = 'none';
+      document.getElementById('verify-email-addr').textContent = email;
+      document.getElementById('verify-pending').style.display = 'block';
+    }
+
+    function backToLogin() {
+      document.getElementById('verify-pending').style.display = 'none';
+      document.getElementById('auth-form').style.display = 'block';
+      switchTab('login');
+    }
+
+    async function resendVerification() {
+      const btn = document.getElementById('resend-btn');
+      btn.disabled = true;
+      btn.textContent = 'שולח...';
+      const { error } = await sb.auth.resend({ type: 'signup', email: pendingEmail });
+      if (error) {
+        btn.textContent = 'שגיאה — נסה שוב';
+      } else {
+        btn.textContent = '✓ נשלח!';
+      }
+      setTimeout(() => { btn.disabled = false; btn.textContent = 'שלח שוב'; }, 3000);
+    }
+
     async function handleSubmit(e) {
       e.preventDefault();
       const email = document.getElementById('email').value.trim();
@@ -87,22 +140,32 @@
       if (currentTab === 'login') {
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) {
-          showMessage(error.message, 'error');
+          if (error.message.toLowerCase().includes('email not confirmed')) {
+            showMessage('האימייל שלך לא אומת עדיין. בדוק את תיבת הדואר ולחץ על קישור האימות.', 'error');
+          } else {
+            showMessage(error.message, 'error');
+          }
           btn.disabled = false;
           btn.textContent = 'התחבר';
         } else {
           window.location.href = 'dashboard.html';
         }
       } else {
-        const { error } = await sb.auth.signUp({ email, password });
+        const { data, error } = await sb.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: window.location.origin }
+        });
         if (error) {
           showMessage(error.message, 'error');
           btn.disabled = false;
           btn.textContent = 'צור חשבון';
+        } else if (data.session) {
+          // Email confirmation disabled in Supabase — user is logged in immediately
+          window.location.href = 'onboarding.html';
         } else {
-          showMessage('החשבון נוצר בהצלחה! התחברו עם הפרטים שלכם.', 'success');
-          btn.disabled = false;
-          btn.textContent = 'צור חשבון';
+          // Email confirmation enabled — ask user to verify
+          showVerificationPending(email);
         }
       }
     }
