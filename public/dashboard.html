@@ -296,24 +296,27 @@
       const lastSeen = localStorage.getItem(seenKey);
       if (lastSeen === todayKey) return;
 
-      const lastSeenDate = lastSeen ? new Date(lastSeen + 'T00:00:00') : new Date(0);
       const now = new Date();
       const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-      const [{ data: upcoming }, { data: newOnes }] = await Promise.all([
-        sb.from('assignments')
+      const { data: upcoming } = await sb.from('assignments')
+        .select('id')
+        .eq('user_id', currentUser.id)
+        .gte('due_date', now.toISOString())
+        .lte('due_date', in7days.toISOString());
+
+      let newCount = 0;
+      if (lastSeen) {
+        // Only count new tasks if we know the last time the user opened the app
+        const lastSeenDate = new Date(lastSeen + 'T00:00:00');
+        const { data: newOnes } = await sb.from('assignments')
           .select('id')
           .eq('user_id', currentUser.id)
-          .gte('due_date', now.toISOString())
-          .lte('due_date', in7days.toISOString()),
-        sb.from('assignments')
-          .select('id')
-          .eq('user_id', currentUser.id)
-          .gt('created_at', lastSeenDate.toISOString()),
-      ]);
+          .gt('created_at', lastSeenDate.toISOString());
+        newCount = newOnes?.length || 0;
+      }
 
       const upcomingCount = upcoming?.length || 0;
-      const newCount = newOnes?.length || 0;
 
       document.getElementById('morning-upcoming').textContent = upcomingCount;
       document.getElementById('morning-new').textContent = newCount;
