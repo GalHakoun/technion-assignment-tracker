@@ -43,11 +43,14 @@ module.exports = async function handler(req, res) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: messages.map(m => ({
-            role: m.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: m.content }]
-          }))
+          contents: [
+            { role: 'user',  parts: [{ text: SYSTEM_PROMPT }] },
+            { role: 'model', parts: [{ text: 'הבנתי, אני מוכן לעזור.' }] },
+            ...messages.map(m => ({
+              role: m.role === 'assistant' ? 'model' : 'user',
+              parts: [{ text: m.content }]
+            }))
+          ]
         })
       }
     );
