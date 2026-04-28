@@ -50,7 +50,8 @@ module.exports = async function handler(req, res) {
               role: m.role === 'assistant' ? 'model' : 'user',
               parts: [{ text: m.content }]
             }))
-          ]
+          ],
+          generationConfig: { thinkingConfig: { thinkingBudget: 0 } }
         })
       }
     );
