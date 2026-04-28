@@ -33,7 +33,7 @@
       <div class="card-header">
         <div class="card-title">&#128203; כל המטלות <span class="task-count" id="nav-badge" style="display:none"></span></div>
         <div style="display:flex;gap:0.5rem">
-          <button class="btn-add" onclick="openAddModal()" title="הוספת מטלה">&#43;</button>
+          <button class="btn-add" onclick="openAddModal()">&#43;<span class="btn-add-label"> הוספת מטלה</span></button>
           <button class="btn-sync" id="sync-btn" onclick="syncNow()">סנכרן</button>
         </div>
       </div>
@@ -221,6 +221,7 @@
     let dueSoonThreshold = 3;
     let showOverdue = true;
     let searchQuery = '';
+    let openMenuId = null;
 
     const sortKey      = () => `default_sort_${currentUser.id}`;
     const thresholdKey = () => `due_soon_days_${currentUser.id}`;
@@ -285,6 +286,8 @@
       await loadAssignments();
       await maybeShowMorning();
       maybeAutoSync();
+      setupRealtimeSync();
+      setInterval(() => { if (!document.hidden) loadAssignments(); }, 30000);
     }
 
     async function maybeShowMorning() {
@@ -577,6 +580,29 @@
       renderAssignments(lastAssignments);
     }
 
+    // ── Card menu ──
+
+    function toggleCardMenu(id, event) {
+      event.stopPropagation();
+      const menuEl = document.getElementById('card-menu-' + id);
+      if (!menuEl) return;
+      if (openMenuId && openMenuId !== id) {
+        const prev = document.getElementById('card-menu-' + openMenuId);
+        if (prev) prev.style.display = 'none';
+      }
+      const isOpen = menuEl.style.display !== 'none';
+      menuEl.style.display = isOpen ? 'none' : 'block';
+      openMenuId = isOpen ? null : id;
+    }
+
+    function closeCardMenu() {
+      if (openMenuId) {
+        const menuEl = document.getElementById('card-menu-' + openMenuId);
+        if (menuEl) menuEl.style.display = 'none';
+        openMenuId = null;
+      }
+    }
+
     // ── Pin ──
 
     async function togglePin(id, currentPinned) {
@@ -722,6 +748,7 @@
     }
 
     function renderAssignments(assignments) {
+      openMenuId = null;
       const container = document.getElementById('assignments-container');
       const filterBar = document.getElementById('filter-bar');
 
@@ -909,9 +936,8 @@
 
       const completedClass = a.completed ? 'completed' : '';
       const urgentClass = (a.urgent && !a.completed) ? 'urgent' : '';
-      const pinBtn = `<button class="btn-pin${a.pinned ? ' is-pinned' : ''}" onclick="togglePin('${a.id}', ${a.pinned})" title="${a.pinned ? 'הסר מהמיקוד' : 'שים במיקוד'}">&#128204;</button>`;
-      const urgentBtn = `<button class="btn-urgent${a.urgent ? ' is-urgent' : ''}" onclick="toggleUrgent('${a.id}', ${a.urgent})" title="${a.urgent ? 'בטל דחיפות' : 'סמן כדחוף'}">&#9889;</button>`;
-      const deleteBtn = `<button class="btn-delete" onclick="deleteAssignment('${a.id}')" title="מחק">&#128465;</button>`;
+      const pinLabel = a.pinned ? '📌 בטל הצמדה' : '📌 הצמד';
+      const urgentLabel = a.urgent ? '⚡ בטל דחיפות' : '⚡ סמן כדחוף';
 
       return `
         <div class="assignment-card ${urgency} ${urgentClass} ${completedClass}">
@@ -925,9 +951,14 @@
             <div class="due-date">${dueFmt}</div>
             ${countdown ? `<div class="due-countdown ${urgency}">${countdown}</div>` : ''}
           </div>
-          ${urgentBtn}
-          ${pinBtn}
-          ${deleteBtn}
+          <div class="card-menu-wrap">
+            <button class="btn-menu" onclick="toggleCardMenu('${a.id}', event)">&#8942;</button>
+            <div class="card-menu" id="card-menu-${a.id}" style="display:none">
+              <button onclick="togglePin('${a.id}', ${a.pinned});closeCardMenu()">${pinLabel}</button>
+              <button onclick="toggleUrgent('${a.id}', ${a.urgent});closeCardMenu()">${urgentLabel}</button>
+              <button class="menu-delete" onclick="deleteAssignment('${a.id}')">🗑️ מחק</button>
+            </div>
+          </div>
         </div>`;
     }
 
@@ -972,6 +1003,19 @@
       if (localStorage.getItem(syncKey) === todayKey) return;
       localStorage.setItem(syncKey, todayKey);
       syncNow();
+    }
+
+    // ── Real-time cross-device sync ──
+
+    function setupRealtimeSync() {
+      sb.channel('assignments-sync')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'assignments',
+          filter: `user_id=eq.${currentUser.id}`
+        }, () => loadAssignments())
+        .subscribe();
     }
 
     // ── Manual assignment entry ──
@@ -1052,6 +1096,7 @@
         const menu = document.getElementById('course-dropdown-menu');
         if (menu) menu.style.display = 'none';
       }
+      closeCardMenu();
     });
 
     init();
