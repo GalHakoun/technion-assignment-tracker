@@ -1757,6 +1757,20 @@ body.dark .pinned-card.urgency-done {
 .chat-send:hover { background: var(--accent-dark); }
 .chat-send:disabled { opacity: 0.5; cursor: not-allowed; }
 
+.chat-summary-btn {
+  font-size: 0.75rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 12px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
+}
+.chat-summary-btn:hover { background: var(--accent); color: #fff; }
+
 /* Restart button */
 .chat-restart {
   align-self: center;

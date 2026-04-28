@@ -1302,6 +1302,7 @@
       <button class="chat-save-btn chat-save-no" onclick="endChat(false)">לא</button>
     </div>
     <div class="chat-input-row" id="chat-input-row">
+      <button class="chat-summary-btn" id="chat-summary-btn" style="display:none" onclick="triggerSummary()">סיכום שיחה</button>
       <input class="chat-input" id="chat-input" type="text" placeholder="כתוב הודעה..." dir="rtl"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}">
       <button class="chat-send" id="chat-send" onclick="sendMessage()">&#10148;</button>
@@ -1403,6 +1404,10 @@
     }
 
     function offerEndChat() {
+      document.getElementById('chat-summary-btn').style.display = 'inline-block';
+    }
+
+    function triggerSummary() {
       chatEnded = true;
       document.getElementById('chat-input-row').style.display = 'none';
       document.getElementById('chat-save-bar').style.display = 'flex';
