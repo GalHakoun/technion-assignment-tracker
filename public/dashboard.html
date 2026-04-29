@@ -26,6 +26,27 @@
     <div class="navbar-brand"><img src="logo.png" alt="Checker" class="navbar-logo"> Checker</div>
   </nav>
 
+  <div class="hero-banner" id="hero-banner">
+    <div class="hero-left">
+      <div class="hero-greeting" id="hero-greeting">שלום! 👋</div>
+      <div class="hero-msg" id="hero-msg">טוען מטלות...</div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-tile">
+        <div class="stat-num" id="stat-today">—</div>
+        <div class="stat-label">להיום</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-num" id="stat-week">—</div>
+        <div class="stat-label">השבוע</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-num" id="stat-done">—</div>
+        <div class="stat-label">הושלמו</div>
+      </div>
+    </div>
+  </div>
+
   <div class="dashboard-content">
 
     <!-- Pinned assignment -->
@@ -923,8 +944,39 @@
       updateCourseFilterLabel();
     }
 
+    function updateHeroBanner(assignments) {
+      const now = new Date();
+      const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      const weekEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+      const active = assignments.filter(a => !a.completed);
+      const todayCount = active.filter(a => a.due_date && new Date(a.due_date) < todayEnd && new Date(a.due_date) >= now).length;
+      const weekCount = active.filter(a => a.due_date && new Date(a.due_date) >= now && new Date(a.due_date) <= weekEnd).length;
+      const doneCount = assignments.filter(a => a.completed).length;
+      const urgentCount = active.filter(a => a.urgent).length;
+      const overdueCount = active.filter(a => a.due_date && new Date(a.due_date) < now).length;
+
+      document.getElementById('stat-today').textContent = todayCount;
+      document.getElementById('stat-week').textContent = weekCount;
+      document.getElementById('stat-done').textContent = doneCount;
+
+      const name = currentUser?.email?.split('@')[0]?.split('.')[0] || '';
+      const displayName = name.charAt(0).toUpperCase() + name.slice(1);
+      document.getElementById('hero-greeting').textContent = `שלום, ${displayName}! 👋`;
+
+      const msg = overdueCount > 0
+        ? `${overdueCount} מטלות באיחור — בוא נסגור אותן 💪`
+        : urgentCount > 0
+        ? `${urgentCount} מטלות דחופות ממתינות לך ⚡`
+        : active.length === 0
+        ? 'כל המטלות הושלמו! כל הכבוד 🎉'
+        : `${active.length} מטלות פעילות — בהצלחה! 📚`;
+      document.getElementById('hero-msg').textContent = msg;
+    }
+
     function renderAssignments(assignments) {
       openMenuId = null;
+      updateHeroBanner(assignments);
       const container = document.getElementById('assignments-container');
       const filterBar = document.getElementById('filter-bar');
 
