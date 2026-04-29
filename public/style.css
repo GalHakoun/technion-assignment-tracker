@@ -1425,6 +1425,13 @@ body.dark .pinned-card.urgency-done {
 
   .btn-share-label { display: none; }
   .btn-share-icon { display: inline; }
+
+  .btn-share {
+    border: none;
+    background: none;
+    padding: 0.25rem 0.375rem;
+    color: #000;
+  }
   .btn-add-label { display: none; }
   .btn-add-icon { display: inline; }
 }
