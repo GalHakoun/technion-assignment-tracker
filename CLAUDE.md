@@ -29,9 +29,9 @@ Multi-agent system where each agent has one clear responsibility:
 
 ## Git Workflow
 - Before touching any file, run `git pull origin main`
-- Always create a new branch named after the feature being worked on (e.g. `feature/share-button`)
+- Always create a new branch named after the feature being worked on (e.g. `feature/add-notifications`)
 - Never push directly to main
-- When work is done, push the branch and remind the user to open a Pull Request on GitHub
+- When work is done, push the branch and remind the user to open a Pull Request
 
 ## Key Rules
 - Never break existing functionality when adding new features
