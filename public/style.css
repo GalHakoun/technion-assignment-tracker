@@ -1292,6 +1292,17 @@ body.dark .pinned-card.urgency-done {
     padding: 0.4rem 0.7rem;
   }
 
+  .navbar-right {
+    gap: 0.5rem;
+  }
+
+  .btn-share-label { display: none; }
+  .btn-share-icon { display: inline; }
+  .btn-share {
+    padding: 0.4rem 0.6rem;
+    font-size: 1rem;
+  }
+
   /* Dashboard content */
   .dashboard-content {
     padding: 0.75rem;
@@ -1431,6 +1442,7 @@ body.dark .pinned-card.urgency-done {
   background: var(--accent);
   color: #fff;
 }
+.btn-share-icon { display: none; }
 
 /* ── Share modal ── */
 .share-card {
