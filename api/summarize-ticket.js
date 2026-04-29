@@ -20,7 +20,7 @@ module.exports = async function handler(req, res) {
     .map(m => `${m.role === 'user' ? 'משתמש' : 'בוט'}: ${m.content}`)
     .join('\n');
 
-  const summaryPrompt = `להלן שיחה בין משתמש לבוט של אפליקציית Technion Tracker.
+  const summaryPrompt = `להלן שיחה בין משתמש לבוט של אפליקציית Checker.
 סכם את השיחה עבור המפתח בפורמט הבא (בעברית):
 
 סוג: [פידבק / שאלה / רעיון לפיצ'ר / מעורב]
