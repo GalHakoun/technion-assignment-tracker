@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Checker">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="style.css?v=20260429">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -18,13 +18,31 @@
     <div class="navbar-right">
       <button class="btn-logout" onclick="logout()">התנתק</button>
       <button class="btn-settings" onclick="openSettings()" title="Settings">&#9881;&#65039;</button>
-      <button class="btn-share" onclick="openShare()" title="שתף">
-        <span class="btn-share-label">שתף עם חבר</span>
-        <svg class="btn-share-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-      </button>
+      <button class="btn-share" onclick="openShare()" title="שתף">שתף עם חבר</button>
     </div>
     <div class="navbar-brand"><img src="logo.png" alt="Checker" class="navbar-logo"> Checker</div>
   </nav>
+
+  <div class="hero-banner" id="hero-banner">
+    <div class="hero-left">
+      <div class="hero-greeting" id="hero-greeting">שלום! 👋</div>
+      <div class="hero-msg" id="hero-msg">טוען מטלות...</div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-tile">
+        <div class="stat-num" id="stat-today">—</div>
+        <div class="stat-label">להיום</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-num" id="stat-week">—</div>
+        <div class="stat-label">השבוע</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-num" id="stat-done">—</div>
+        <div class="stat-label">הושלמו</div>
+      </div>
+    </div>
+  </div>
 
   <div class="dashboard-content">
 
@@ -37,7 +55,7 @@
         <div class="card-title">&#128203; כל המטלות <span class="task-count" id="nav-badge" style="display:none"></span></div>
         <div style="display:flex;gap:0.5rem;align-items:center">
           <button class="btn-search" id="search-btn" onclick="toggleSearch()" title="חיפוש">&#128269;</button>
-          <button class="btn-add" onclick="openAddModal()"><span class="btn-add-label">הוספת מטלה</span><span class="btn-add-icon">+</span></button>
+          <button class="btn-add" onclick="openAddModal()"><span class="btn-add-label">הוספת מטלה</span></button>
           <button class="btn-sync" id="sync-btn" onclick="syncNow()">סנכרן</button>
         </div>
       </div>
@@ -923,8 +941,39 @@
       updateCourseFilterLabel();
     }
 
+    function updateHeroBanner(assignments) {
+      const now = new Date();
+      const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      const weekEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+      const active = assignments.filter(a => !a.completed);
+      const todayCount = active.filter(a => a.due_date && new Date(a.due_date) < todayEnd && new Date(a.due_date) >= now).length;
+      const weekCount = active.filter(a => a.due_date && new Date(a.due_date) >= now && new Date(a.due_date) <= weekEnd).length;
+      const doneCount = assignments.filter(a => a.completed).length;
+      const urgentCount = active.filter(a => a.urgent).length;
+      const overdueCount = active.filter(a => a.due_date && new Date(a.due_date) < now).length;
+
+      document.getElementById('stat-today').textContent = todayCount;
+      document.getElementById('stat-week').textContent = weekCount;
+      document.getElementById('stat-done').textContent = doneCount;
+
+      const name = currentUser?.email?.split('@')[0]?.split('.')[0] || '';
+      const displayName = name.charAt(0).toUpperCase() + name.slice(1);
+      document.getElementById('hero-greeting').textContent = `שלום, ${displayName}! 👋`;
+
+      const msg = overdueCount > 0
+        ? `${overdueCount} מטלות באיחור — בוא נסגור אותן 💪`
+        : urgentCount > 0
+        ? `${urgentCount} מטלות דחופות ממתינות לך ⚡`
+        : active.length === 0
+        ? 'כל המטלות הושלמו! כל הכבוד 🎉'
+        : `${active.length} מטלות פעילות — בהצלחה! 📚`;
+      document.getElementById('hero-msg').textContent = msg;
+    }
+
     function renderAssignments(assignments) {
       openMenuId = null;
+      updateHeroBanner(assignments);
       const container = document.getElementById('assignments-container');
       const filterBar = document.getElementById('filter-bar');
 
@@ -1457,11 +1506,6 @@
     }
   </script>
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').then(reg => reg.update());
-      navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
-    }
-  </script>
+  <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 </body>
 </html>
