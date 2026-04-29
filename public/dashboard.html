@@ -381,12 +381,12 @@
 
       let newCount = 0;
       if (lastSeen) {
-        // Only count new tasks if we know the last time the user opened the app
         const lastSeenDate = new Date(lastSeen + 'T00:00:00');
         const { data: newOnes } = await sb.from('assignments')
           .select('id')
           .eq('user_id', currentUser.id)
-          .gt('created_at', lastSeenDate.toISOString());
+          .gt('created_at', lastSeenDate.toISOString())
+          .gte('due_date', now.toISOString());
         newCount = newOnes?.length || 0;
       }
 
