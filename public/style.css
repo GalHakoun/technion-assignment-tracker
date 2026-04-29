@@ -1435,16 +1435,16 @@ body.dark .pinned-card.urgency-done {
   font-size: 0.85rem;
   border-radius: 6px;
   cursor: pointer;
-  border: 1.5px solid var(--accent);
+  border: 1.5px solid #000;
   background: transparent;
-  color: var(--accent);
+  color: #000;
   font-weight: 600;
   font-family: inherit;
   transition: all 0.2s;
 }
 
 .btn-share:hover {
-  background: var(--accent);
+  background: #000;
   color: #fff;
 }
 
