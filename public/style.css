@@ -1335,11 +1335,8 @@ body.dark .pinned-card.urgency-done {
   }
 
   .btn-share-label { display: none; }
-  .btn-share-icon { display: inline-flex; vertical-align: middle; }
-  .btn-share {
-    padding: 0.4rem 0.6rem;
-    line-height: 1;
-  }
+  .btn-share-icon { display: inline; }
+  .btn-share { padding: 0.4rem 0.6rem; }
 
   /* Dashboard content */
   .dashboard-content {
@@ -1480,7 +1477,7 @@ body.dark .pinned-card.urgency-done {
   background: var(--accent);
   color: #fff;
 }
-.btn-share-icon { display: none; }
+.btn-share-icon { display: none; font-size: 0.85rem; font-weight: 600; }
 
 /* ── Share modal ── */
 .share-card {
