@@ -64,7 +64,7 @@ module.exports = async function handler(req, res) {
     const html = `
       <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:520px;margin:0 auto;direction:rtl;text-align:right;color:#1a1a2e">
         <div style="background:#6c63ff;padding:20px 24px;border-radius:12px 12px 0 0">
-          <span style="color:white;font-size:20px;font-weight:700">📚 Technion Tracker</span>
+          <span style="color:white;font-size:20px;font-weight:700">📚 Checker</span>
         </div>
         <div style="background:#ffffff;padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
           <p style="font-size:18px;font-weight:600;margin:0 0 8px">בוקר טוב! 🌅</p>
@@ -97,7 +97,7 @@ module.exports = async function handler(req, res) {
           <div style="margin-top:20px;text-align:center">
             <a href="https://technion-assignment-tracker.vercel.app/dashboard.html"
                style="background:#6c63ff;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px">
-              פתח את Technion Tracker
+              פתח את Checker
             </a>
           </div>
         </div>
