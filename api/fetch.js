@@ -58,9 +58,9 @@ module.exports = async function handler(req, res) {
     { global: { headers: { Authorization: `Bearer ${token}` } } }
   );
 
-  const { data: { user }, error: userError } = await sb.auth.getUser();
+  const { data: { user }, error: userError } = await sb.auth.getUser(token);
   if (userError || !user) {
-    return res.status(401).json({ error: 'Invalid token' });
+    return res.status(401).json({ error: userError?.message || 'Invalid token' });
   }
 
   const { data: profile, error: profileError } = await sb

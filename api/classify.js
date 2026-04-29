@@ -46,8 +46,8 @@ module.exports = async function handler(req, res) {
     { global: { headers: { Authorization: `Bearer ${token}` } } }
   );
 
-  const { data: { user }, error: userError } = await sb.auth.getUser();
-  if (userError || !user) return res.status(401).json({ error: 'Invalid token' });
+  const { data: { user }, error: userError } = await sb.auth.getUser(token);
+  if (userError || !user) return res.status(401).json({ error: userError?.message || 'Invalid token' });
 
   const [{ data: events }, { data: remembered }, { data: existing }] = await Promise.all([
     sb.from('raw_events').select('id, title, description, start_time, raw_data').eq('user_id', user.id),
