@@ -1306,6 +1306,9 @@ body.dark .pinned-card.urgency-done {
   border-color: var(--accent);
 }
 
+.btn-share-icon { display: none; }
+.btn-share-label { display: inline; }
+
 /* ── Mobile ── */
 
 @media (max-width: 600px) {
@@ -1480,7 +1483,6 @@ body.dark .pinned-card.urgency-done {
   background: var(--accent);
   color: #fff;
 }
-.btn-share-icon { display: none; }
 
 /* ── Share modal ── */
 .share-card {
