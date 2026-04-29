@@ -1265,6 +1265,12 @@ body.dark .pinned-card.urgency-done {
   border-color: var(--accent);
 }
 
+/* ── Button label/icon toggle (desktop: label, mobile: icon) ── */
+.btn-share-icon { display: none; }
+.btn-share-label { display: inline; }
+.btn-add-icon { display: none; }
+.btn-add-label { display: inline; }
+
 /* ── Mobile ── */
 
 @media (max-width: 600px) {
@@ -1422,12 +1428,6 @@ body.dark .pinned-card.urgency-done {
   .btn-add-label { display: none; }
   .btn-add-icon { display: inline; }
 }
-
-/* ── Button label/icon toggle (desktop: label, mobile: icon) ── */
-.btn-share-icon { display: none; }
-.btn-share-label { display: inline; }
-.btn-add-icon { display: none; }
-.btn-add-label { display: inline; }
 
 /* ── Share button (navbar) ── */
 .btn-share {
