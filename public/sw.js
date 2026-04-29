@@ -1,4 +1,4 @@
-const CACHE = 'technion-static-v5';
+const CACHE = 'technion-static-v6';
 const IMAGES = [
   '/logo.png',
   '/icon-192.png',
@@ -46,8 +46,8 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Network-first for HTML/CSS/JS — always get fresh, fall back to cache if offline
+  // Network-first for HTML/CSS/JS — bypass HTTP cache, fall back to cache if offline
   e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
+    fetch(e.request, { cache: 'no-cache' }).catch(() => caches.match(e.request))
   );
 });
