@@ -1,6 +1,6 @@
 {
-  "name": "Technion Tracker",
-  "short_name": "Technion",
+  "name": "Checker",
+  "short_name": "Checker",
   "description": "עקוב אחרי כל המטלות שלך ממקום אחד",
   "start_url": "/dashboard.html",
   "display": "standalone",
