@@ -23,6 +23,12 @@
     <div class="navbar-brand"><img src="logo.png" alt="Technion Tracker" class="navbar-logo"> Technion Tracker</div>
   </nav>
 
+  <div class="tab-bar">
+    <button class="tab-btn tab-active" id="tab-tasks" onclick="switchTab('tasks')">המטלות שלי</button>
+    <button class="tab-btn" id="tab-schedule" onclick="switchTab('schedule')">המערכת שלי</button>
+  </div>
+
+  <div id="panel-tasks">
   <div class="dashboard-content">
 
     <!-- Pinned assignment -->
@@ -1277,8 +1283,22 @@
       if (!document.hidden && currentUser) loadAssignments();
     });
 
+    function switchTab(tab) {
+      document.getElementById('panel-tasks').style.display = tab === 'tasks' ? 'block' : 'none';
+      document.getElementById('panel-schedule').style.display = tab === 'schedule' ? 'block' : 'none';
+      document.getElementById('tab-tasks').classList.toggle('tab-active', tab === 'tasks');
+      document.getElementById('tab-schedule').classList.toggle('tab-active', tab === 'schedule');
+      document.getElementById('chat-fab').style.display = tab === 'tasks' ? 'flex' : 'none';
+    }
+
     init();
   </script>
+  </div><!-- /panel-tasks -->
+
+  <div id="panel-schedule" style="display:none">
+    <iframe src="https://cheesefork.cf/" class="cheesefork-frame" allowfullscreen></iframe>
+  </div>
+
   <!-- ── Chat Bot ── -->
   <button class="chat-fab" id="chat-fab" onclick="toggleChat()" title="צ'אט">
     <span class="chat-fab-icon" id="chat-fab-icon">💬</span>
