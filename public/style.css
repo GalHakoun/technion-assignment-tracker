@@ -51,7 +51,7 @@ body.dark {
 .auth-logo {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--accent);
+  color: #1a1a2e;
   margin-bottom: 0.4rem;
 }
 
@@ -203,7 +203,7 @@ input:focus {
 .navbar-brand {
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--accent);
+  color: #1a1a2e;
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -211,19 +211,13 @@ input:focus {
 
 .navbar-logo {
   height: 32px;
-  width: 32px;
-  background: #000;
-  border-radius: 50%;
-  object-fit: cover;
+  width: auto;
 }
 
 .auth-logo-img {
   height: 48px;
-  width: 48px;
+  width: auto;
   vertical-align: middle;
-  background: #000;
-  border-radius: 50%;
-  object-fit: cover;
 }
 
 .navbar-right {
