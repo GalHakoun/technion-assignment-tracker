@@ -1408,10 +1408,26 @@ body.dark .pinned-card.urgency-done {
   }
 
   .btn-add {
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem 0.6rem;
     font-size: 0.8rem;
   }
+
+  .btn-sync {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .btn-share-label { display: none; }
+  .btn-share-icon { display: inline; }
+  .btn-add-label { display: none; }
+  .btn-add-icon { display: inline; }
 }
+
+/* ── Button label/icon toggle (desktop: label, mobile: icon) ── */
+.btn-share-icon { display: none; }
+.btn-share-label { display: inline; }
+.btn-add-icon { display: none; }
+.btn-add-label { display: inline; }
 
 /* ── Share button (navbar) ── */
 .btn-share {

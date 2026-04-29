@@ -1,4 +1,4 @@
-const CACHE = 'technion-static-v2';
+const CACHE = 'technion-static-v3';
 const IMAGES = [
   '/logo.png',
   '/icon-192.png',
