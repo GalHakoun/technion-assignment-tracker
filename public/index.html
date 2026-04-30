@@ -354,15 +354,21 @@
     let pendingEmail = '';
 
     async function init() {
-      // Catches OAuth session the moment it's established (covers PKCE redirect)
       sb.auth.onAuthStateChange((event, session) => {
-        if (session) window.location.href = 'dashboard.html';
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+          window.location.href = 'dashboard.html';
+        }
       });
+
       const params = new URLSearchParams(window.location.search);
       if (params.get('code')) {
-        await sb.auth.exchangeCodeForSession(window.location.href);
-        return; // onAuthStateChange will redirect if successful
+        const { data, error } = await sb.auth.exchangeCodeForSession(window.location.href);
+        if (data?.session) { window.location.href = 'dashboard.html'; return; }
+        // If exchange failed, clean the URL and show login page normally
+        window.history.replaceState({}, '', window.location.pathname);
+        return;
       }
+
       const { data: { session } } = await sb.auth.getSession();
       if (session) window.location.href = 'dashboard.html';
     }
