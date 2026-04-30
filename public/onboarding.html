@@ -210,7 +210,10 @@
 
 <div class="wizard">
 
-  <div class="wizard-logo"><img src="logo.png" alt="Checker" class="auth-logo-img"> Checker</div>
+  <div class="wizard-topbar">
+    <div class="wizard-logo" style="margin-bottom:0"><img src="logo.png" alt="Checker" class="auth-logo-img"> Checker</div>
+    <button class="btn-wizard-logout" onclick="logout()">התנתק</button>
+  </div>
   <div class="wizard-dots" id="wizard-dots">
     <div class="wizard-dot" id="dot-0"></div>
     <div class="wizard-dot" id="dot-1"></div>
@@ -374,6 +377,11 @@
     } else {
       window.location.href = 'dashboard.html';
     }
+  }
+
+  async function logout() {
+    await sb.auth.signOut();
+    window.location.href = 'index.html';
   }
 
   function showMessage(text, type) {
