@@ -15,7 +15,14 @@
 <body>
 
   <div class="auth-container">
-    <div class="auth-logo"><img src="logo.png" alt="Checker" class="auth-logo-img"> Checker</div>
+    <div class="auth-logo">
+      <svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg" class="auth-logo-img">
+        <circle cx="22" cy="22" r="20.5" fill="none" stroke="#7c6ff7" stroke-width="3"/>
+        <circle cx="22" cy="22" r="16.5" fill="#111111"/>
+        <polyline points="14,22 19.5,28 30,15" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Checker
+    </div>
     <p class="auth-tagline">עקוב אחרי כל המטלות שלך ממקום אחד</p>
 
     <div class="auth-card">
@@ -184,11 +191,6 @@
       }
     }
   </script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').then(reg => reg.update());
-      navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
-    }
-  </script>
+  <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 </body>
 </html>

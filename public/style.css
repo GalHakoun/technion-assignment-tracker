@@ -8,8 +8,8 @@
 
 :root {
   color-scheme: light;
-  --accent: #1a1a2e;
-  --accent-dark: #000000;
+  --accent: #7c6ff7;
+  --accent-dark: #5b4fd4;
   --bg: #f8f9fa;
   --card-bg: #ffffff;
   --text: #1a1a2e;
@@ -212,6 +212,65 @@ input:focus {
 .navbar-logo {
   height: 32px;
   width: auto;
+}
+
+/* ── Hero Banner ── */
+.hero-banner {
+  background: #edeaff;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  direction: rtl;
+  gap: 1rem;
+  border-bottom: 1px solid #ddd8ff;
+}
+
+.hero-left { flex: 1; text-align: right; }
+
+.hero-greeting {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 0.25rem;
+}
+
+.hero-msg {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.stat-tile {
+  background: #ffffff;
+  border: 1px solid #e0dbff;
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  text-align: center;
+  min-width: 68px;
+}
+
+.stat-num {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.72rem;
+  color: #6b7280;
+  margin-top: 0.2rem;
+}
+
+@media (max-width: 480px) {
+  .hero-banner { flex-direction: column; align-items: flex-start; }
+  .hero-stats { width: 100%; justify-content: space-between; }
 }
 
 .auth-logo-img {
@@ -1265,12 +1324,6 @@ body.dark .pinned-card.urgency-done {
   border-color: var(--accent);
 }
 
-/* ── Button label/icon toggle (desktop: label, mobile: icon) ── */
-.btn-share-icon { display: none; }
-.btn-share-label { display: inline; }
-.btn-add-icon { display: none; }
-.btn-add-label { display: inline; }
-
 /* ── Mobile ── */
 
 @media (max-width: 600px) {
@@ -1414,26 +1467,9 @@ body.dark .pinned-card.urgency-done {
   }
 
   .btn-add {
-    padding: 0.5rem 0.6rem;
+    padding: 0.5rem 0.75rem;
     font-size: 0.8rem;
   }
-
-  .btn-sync {
-    padding: 0.5rem 0.6rem;
-    font-size: 0.8rem;
-  }
-
-  .btn-share-label { display: none; }
-  .btn-share-icon { display: inline; }
-
-  .btn-share {
-    border: none;
-    background: none;
-    padding: 0.25rem 0.375rem;
-    color: #000;
-  }
-  .btn-add-label { display: none; }
-  .btn-add-icon { display: inline; }
 }
 
 /* ── Share button (navbar) ── */
@@ -1442,16 +1478,16 @@ body.dark .pinned-card.urgency-done {
   font-size: 0.85rem;
   border-radius: 6px;
   cursor: pointer;
-  border: 1.5px solid #000;
+  border: 1.5px solid var(--accent);
   background: transparent;
-  color: #000;
+  color: var(--accent);
   font-weight: 600;
   font-family: inherit;
   transition: all 0.2s;
 }
 
 .btn-share:hover {
-  background: #000;
+  background: var(--accent);
   color: #fff;
 }
 
