@@ -5,67 +5,293 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checker</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1a6ab5">
+  <meta name="theme-color" content="#7c6ff7">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Checker">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="style.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #eeeef8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: -80px; left: -80px;
+      width: 320px; height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #AFA9EC 0%, transparent 70%);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: absolute;
+      bottom: -60px; right: -60px;
+      width: 260px; height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #CECBF6 0%, transparent 70%);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse-ring {
+      0%   { transform: scale(1);    opacity: 0.6; }
+      70%  { transform: scale(1.55); opacity: 0; }
+      100% { transform: scale(1.55); opacity: 0; }
+    }
+    @keyframes checkDraw {
+      from { stroke-dashoffset: 40; }
+      to   { stroke-dashoffset: 0; }
+    }
+
+    .fade1 { animation: fadeUp 0.6s ease both 0.1s; }
+    .fade2 { animation: fadeUp 0.6s ease both 0.35s; }
+    .fade3 { animation: fadeUp 0.6s ease both 0.55s; }
+    .fade4 { animation: fadeUp 0.6s ease both 0.75s; }
+
+    .container {
+      width: 100%;
+      max-width: 360px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .logo-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+
+    .icon-ring-container {
+      position: relative;
+      width: 72px;
+      height: 72px;
+    }
+
+    .pulse-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid #7F77DD;
+      animation: pulse-ring 2s ease-out infinite;
+    }
+    .pulse-ring-2 {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid #AFA9EC;
+      animation: pulse-ring 2s ease-out infinite 0.6s;
+    }
+
+    .icon-circle {
+      position: absolute;
+      inset: 0;
+      background: #111;
+      border-radius: 50%;
+      border: 2px solid #7F77DD;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon-circle svg polyline {
+      stroke-dasharray: 40;
+      stroke-dashoffset: 0;
+      animation: checkDraw 0.8s ease both 0.3s;
+    }
+
+    .logo-title { text-align: center; }
+    .logo-title h1 {
+      font-size: 26px;
+      font-weight: 500;
+      color: #26215C;
+      letter-spacing: -0.5px;
+    }
+    .logo-title p {
+      margin-top: 6px;
+      font-size: 13px;
+      color: #7F77DD;
+    }
+
+    .card {
+      width: 100%;
+      background: white;
+      border: 1px solid #d8d8ee;
+      border-radius: 16px;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field label { font-size: 12px; color: #6060a0; }
+    .field input {
+      background: #f0f0f8;
+      border: 1px solid #d0d0e8;
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #2a2a4a;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+      width: 100%;
+      direction: ltr;
+    }
+    .field input:focus { border-color: #7F77DD; }
+    .field input::placeholder { color: #9090b8; }
+
+    .forgot { text-align: left; }
+    .forgot a { font-size: 12px; color: #7F77DD; text-decoration: none; }
+
+    .message-box {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: none;
+    }
+    .message-box.error   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .message-box.success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      background: #534AB7;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      font-family: inherit;
+    }
+    .btn-login:hover    { background: #7F77DD; }
+    .btn-login:active   { transform: scale(0.97); }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .signup-link {
+      margin-top: 16px;
+      font-size: 12px;
+      color: #9090b8;
+      text-align: center;
+    }
+    .signup-link a { color: #7F77DD; text-decoration: none; cursor: pointer; }
+
+    /* מסך אימות אימייל */
+    .verify-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+      padding: 8px 0;
+    }
+    .verify-icon { font-size: 2.5rem; }
+    .verify-title { font-size: 1rem; font-weight: 700; color: #26215C; }
+    .verify-desc  { font-size: 0.85rem; color: #6b7280; line-height: 1.65; }
+    .verify-email { color: #26215C; font-weight: 600; direction: ltr; display: inline-block; }
+    .btn-resend {
+      width: 100%;
+      padding: 13px;
+      background: #534AB7;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-resend:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-back-login {
+      background: none; border: none; color: #7F77DD;
+      font-size: 13px; cursor: pointer; text-decoration: underline;
+      font-family: inherit;
+    }
+  </style>
 </head>
 <body>
 
-  <div class="auth-container">
-    <div class="auth-logo">
-      <svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg" class="auth-logo-img">
-        <circle cx="22" cy="22" r="20.5" fill="none" stroke="#7c6ff7" stroke-width="3"/>
-        <circle cx="22" cy="22" r="16.5" fill="#111111"/>
-        <polyline points="14,22 19.5,28 30,15" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      Checker
-    </div>
-    <p class="auth-tagline">עקוב אחרי כל המטלות שלך ממקום אחד</p>
+  <div class="container">
 
-    <div class="auth-card">
-      <div class="tabs">
-        <div class="tab active" id="tab-login" onclick="switchTab('login')">התחברות</div>
-        <div class="tab" id="tab-signup" onclick="switchTab('signup')">הרשמה</div>
+    <div class="logo-wrapper fade1">
+      <div class="icon-ring-container">
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring-2"></div>
+        <div class="icon-circle">
+          <svg width="32" height="32" viewBox="0 0 14 14" fill="none">
+            <polyline points="2,7 6,11 12,3" stroke="white" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
       </div>
+      <div class="logo-title">
+        <h1>Checker</h1>
+        <p>המטלות שלך, מסודרות</p>
+      </div>
+    </div>
 
-      <div id="message" style="display:none" class="message"></div>
+    <!-- טופס כניסה / הרשמה -->
+    <div class="card fade2" id="auth-card">
+      <div class="field">
+        <label for="email">אימייל</label>
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="password">סיסמה</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" minlength="6">
+      </div>
+      <div class="forgot" id="forgot-row">
+        <a href="#">שכחתי סיסמה</a>
+      </div>
+      <div class="message-box" id="message-box"></div>
+      <button class="btn-login" id="submit-btn" onclick="handleSubmit()">כניסה</button>
 
-      <form id="auth-form" onsubmit="handleSubmit(event)">
-        <div class="form-group">
-          <label for="email">אימייל</label>
-          <input type="email" id="email" placeholder="your@email.com" required autocomplete="email" dir="ltr">
-        </div>
-        <div class="form-group">
-          <label for="password">סיסמה</label>
-          <input type="password" id="password" placeholder="סיסמה" required minlength="6" autocomplete="current-password">
-        </div>
-        <div class="form-group remember-row" id="remember-row">
-          <label class="remember-label">
-            <input type="checkbox" id="remember-me" checked>
-            זכור אותי
-          </label>
-        </div>
-        <button type="submit" class="btn btn-primary" id="submit-btn">התחבר</button>
-      </form>
-
-      <!-- Email verification pending screen -->
-      <div id="verify-pending" style="display:none;text-align:center;padding:0.5rem 0">
-        <div style="font-size:2.5rem;margin-bottom:0.75rem">📧</div>
-        <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:0.5rem">בדוק את האימייל שלך</div>
-        <div style="font-size:0.875rem;color:var(--text-muted);line-height:1.65;margin-bottom:1.25rem">
+      <!-- מסך אימות -->
+      <div class="verify-screen" id="verify-screen">
+        <div class="verify-icon">📧</div>
+        <div class="verify-title">בדוק את האימייל שלך</div>
+        <div class="verify-desc">
           שלחנו קישור אימות אל<br>
-          <strong id="verify-email-addr" style="color:var(--text);direction:ltr;display:inline-block"></strong><br>
+          <span class="verify-email" id="verify-email"></span><br>
           לחץ על הקישור להפעלת החשבון.
         </div>
-        <button onclick="resendVerification()" class="btn btn-primary" id="resend-btn">שלח שוב</button>
-        <div style="margin-top:0.875rem">
-          <button onclick="backToLogin()" style="background:none;border:none;color:var(--accent);font-size:0.875rem;cursor:pointer;text-decoration:underline;font-family:inherit">חזור להתחברות</button>
-        </div>
+        <button class="btn-resend" id="resend-btn" onclick="resendVerification()">שלח שוב</button>
+        <button class="btn-back-login" onclick="backToLogin()">חזור להתחברות</button>
       </div>
     </div>
+
+    <p class="signup-link fade3" id="toggle-link">
+      אין לך חשבון? <a onclick="switchMode()">הרשמה</a>
+    </p>
+
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -76,56 +302,64 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbmdhb25mdWxqaHR0aHN2cGFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjUyMjMsImV4cCI6MjA5MjUwMTIyM30.5Ig-xpFdKGcK7U_l1jauGb8dSci6atmJoDng2p1A9N0'
     );
 
-    let currentTab = 'login';
+    let mode = 'login';
     let pendingEmail = '';
 
     async function init() {
-      // Handle email verification redirect (PKCE code exchange)
       const params = new URLSearchParams(window.location.search);
       if (params.get('code')) {
         const { error } = await sb.auth.exchangeCodeForSession(window.location.href);
         if (!error) { window.location.href = 'dashboard.html'; return; }
       }
-      // Check for existing valid session (also handles implicit-flow hash tokens)
       const { data: { session } } = await sb.auth.getSession();
       if (session) window.location.href = 'dashboard.html';
     }
-
     init();
 
-    function switchTab(tab) {
-      currentTab = tab;
-      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-      document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
-      document.getElementById('submit-btn').textContent = tab === 'login' ? 'התחבר' : 'צור חשבון';
-      document.getElementById('password').autocomplete = tab === 'login' ? 'current-password' : 'new-password';
-      document.getElementById('remember-row').style.display = tab === 'login' ? 'block' : 'none';
+    function switchMode() {
+      mode = mode === 'login' ? 'signup' : 'login';
+      const isLogin = mode === 'login';
+      document.getElementById('submit-btn').textContent = isLogin ? 'כניסה' : 'צור חשבון';
+      document.getElementById('forgot-row').style.display = isLogin ? 'block' : 'none';
+      document.getElementById('toggle-link').innerHTML = isLogin
+        ? 'אין לך חשבון? <a onclick="switchMode()">הרשמה</a>'
+        : 'כבר יש לך חשבון? <a onclick="switchMode()">התחברות</a>';
+      document.getElementById('password').autocomplete = isLogin ? 'current-password' : 'new-password';
       hideMessage();
     }
 
     function showMessage(text, type) {
-      const el = document.getElementById('message');
+      const el = document.getElementById('message-box');
       el.textContent = text;
-      el.className = 'message ' + type;
+      el.className = 'message-box ' + type;
       el.style.display = 'block';
     }
-
     function hideMessage() {
-      document.getElementById('message').style.display = 'none';
+      document.getElementById('message-box').style.display = 'none';
     }
 
-    function showVerificationPending(email) {
+    function showVerifyScreen(email) {
       pendingEmail = email;
-      document.getElementById('auth-form').style.display = 'none';
-      document.getElementById('message').style.display = 'none';
-      document.getElementById('verify-email-addr').textContent = email;
-      document.getElementById('verify-pending').style.display = 'block';
+      document.getElementById('verify-email').textContent = email;
+      document.getElementById('email').closest('.field').style.display = 'none';
+      document.getElementById('password').closest('.field').style.display = 'none';
+      document.getElementById('forgot-row').style.display = 'none';
+      document.getElementById('message-box').style.display = 'none';
+      document.getElementById('submit-btn').style.display = 'none';
+      document.getElementById('toggle-link').style.display = 'none';
+      document.getElementById('verify-screen').style.display = 'flex';
     }
 
     function backToLogin() {
-      document.getElementById('verify-pending').style.display = 'none';
-      document.getElementById('auth-form').style.display = 'block';
-      switchTab('login');
+      document.getElementById('email').closest('.field').style.display = 'flex';
+      document.getElementById('password').closest('.field').style.display = 'flex';
+      document.getElementById('forgot-row').style.display = 'block';
+      document.getElementById('submit-btn').style.display = 'block';
+      document.getElementById('toggle-link').style.display = 'block';
+      document.getElementById('verify-screen').style.display = 'none';
+      mode = 'login';
+      document.getElementById('submit-btn').textContent = 'כניסה';
+      document.getElementById('toggle-link').innerHTML = 'אין לך חשבון? <a onclick="switchMode()">הרשמה</a>';
     }
 
     async function resendVerification() {
@@ -133,49 +367,32 @@
       btn.disabled = true;
       btn.textContent = 'שולח...';
       const { error } = await sb.auth.resend({ type: 'signup', email: pendingEmail });
-      if (error) {
-        btn.textContent = 'שגיאה — נסה שוב';
-      } else {
-        btn.textContent = '✓ נשלח!';
-      }
+      btn.textContent = error ? 'שגיאה — נסה שוב' : '✓ נשלח!';
       setTimeout(() => { btn.disabled = false; btn.textContent = 'שלח שוב'; }, 3000);
     }
 
-    async function handleSubmit(e) {
-      e.preventDefault();
-      const email = document.getElementById('email').value.trim();
+    async function handleSubmit() {
+      const email    = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      const btn = document.getElementById('submit-btn');
-
-      btn.disabled = true;
-      btn.textContent = currentTab === 'login' ? 'מתחבר...' : 'יוצר חשבון...';
+      const btn      = document.getElementById('submit-btn');
       hideMessage();
+      btn.disabled = true;
+      btn.textContent = mode === 'login' ? 'מתחבר...' : 'יוצר חשבון...';
 
-      if (currentTab === 'login') {
-        const remember = document.getElementById('remember-me').checked;
+      if (mode === 'login') {
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) {
-          if (error.message.toLowerCase().includes('email not confirmed')) {
-            showMessage('האימייל שלך לא אומת עדיין. בדוק את תיבת הדואר ולחץ על קישור האימות.', 'error');
-          } else {
-            showMessage(error.message, 'error');
-          }
+          showMessage(error.message.includes('Email not confirmed')
+            ? 'האימייל שלך לא אומת עדיין. בדוק את תיבת הדואר.'
+            : error.message, 'error');
           btn.disabled = false;
-          btn.textContent = 'התחבר';
+          btn.textContent = 'כניסה';
         } else {
-          localStorage.setItem('remember_me', remember ? 'true' : 'false');
-          if (!remember) {
-            // Move session from localStorage → sessionStorage so it clears on browser close
-            const key = 'sb-rcngaonfuljhtthsvpap-auth-token';
-            const data = localStorage.getItem(key);
-            if (data) { sessionStorage.setItem(key, data); localStorage.removeItem(key); }
-          }
           window.location.href = 'dashboard.html';
         }
       } else {
         const { data, error } = await sb.auth.signUp({
-          email,
-          password,
+          email, password,
           options: { emailRedirectTo: window.location.origin }
         });
         if (error) {
@@ -183,13 +400,16 @@
           btn.disabled = false;
           btn.textContent = 'צור חשבון';
         } else if (data.session) {
-          localStorage.setItem('remember_me', 'true');
           window.location.href = 'onboarding.html';
         } else {
-          showVerificationPending(email);
+          showVerifyScreen(email);
         }
       }
     }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleSubmit();
+    });
   </script>
   <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
 </body>
