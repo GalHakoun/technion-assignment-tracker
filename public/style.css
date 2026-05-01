@@ -1562,6 +1562,23 @@ body.dark .pinned-card.urgency-done {
   color: #fff;
 }
 
+.btn-mobile-icon { display: none; }
+
+@media (max-width: 600px) {
+  .btn-mobile-icon { display: block; }
+  .btn-mobile-text { display: none; }
+  .btn-add-label   { display: none; }
+
+  .btn-share {
+    padding: 0.4rem 0.5rem;
+    line-height: 1;
+  }
+  .btn-add {
+    padding: 0.4rem 0.5rem;
+    line-height: 1;
+  }
+}
+
 /* ── Share modal ── */
 .share-card {
   max-width: 380px;
