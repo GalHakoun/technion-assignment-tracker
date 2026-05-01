@@ -22,10 +22,13 @@
     }
 
     .wizard-logo {
-      font-size: 1.8rem;
+      font-size: 1.2rem;
       font-weight: 700;
-      color: var(--accent);
+      color: #1a1a2e;
       margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
     }
 
     .wizard-dots {
@@ -211,7 +214,14 @@
 <div class="wizard">
 
   <div class="wizard-topbar">
-    <div class="wizard-logo" style="margin-bottom:0"><img src="logo.png" alt="Checker" class="auth-logo-img"> Checker</div>
+    <div class="wizard-logo" style="margin-bottom:0">
+      <svg width="32" height="32" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="19" cy="19" r="17.5" fill="none" stroke="#7c6ff7" stroke-width="3"/>
+        <circle cx="19" cy="19" r="13.5" fill="#111111"/>
+        <polyline points="12,19 17,24.5 27,13" stroke="white" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Checker
+    </div>
     <button class="btn-wizard-logout" onclick="logout()">התנתק</button>
   </div>
   <div class="wizard-dots" id="wizard-dots">
