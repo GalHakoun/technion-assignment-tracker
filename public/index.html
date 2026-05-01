@@ -22,7 +22,7 @@
       justify-content: center;
       padding: 2rem;
       position: relative;
-      overflow: hidden;
+      overflow-x: hidden;
     }
 
     @keyframes fadeUp {
@@ -63,6 +63,7 @@
       align-items: center;
       position: relative;
       z-index: 2;
+      padding-bottom: 160px;
     }
 
     .logo-section {
@@ -188,6 +189,16 @@
     }
     .btn-resend:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-back { background: none; border: none; color: #9b94cc; font-size: 12px; cursor: pointer; font-family: inherit; text-decoration: underline; }
+
+    @media (max-width: 500px) {
+      body {
+        align-items: flex-start;
+        padding: 2.5rem 1.25rem 1rem;
+      }
+      .notebook-bg { height: 40vh; }
+      .container { padding-bottom: 100px; }
+      .logo-section { margin-top: 0.5rem; margin-bottom: 20px; }
+    }
   </style>
 </head>
 <body>
