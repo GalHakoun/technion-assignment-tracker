@@ -87,7 +87,6 @@
           <select class="filter-select" id="sort-select" onchange="currentSort=this.value;localStorage.setItem(sortKey(),this.value);renderAssignments(lastAssignments)">
             <option value="date">לפי תאריך</option>
             <option value="course">לפי קורס</option>
-            <option value="status">לפי סטטוס</option>
           </select>
         </div>
         <div class="filter-group">
@@ -192,7 +191,6 @@
             <select class="settings-select" id="setting-sort" onchange="saveSetting('sort',this.value)">
               <option value="date">לפי תאריך</option>
               <option value="course">לפי קורס</option>
-              <option value="status">לפי סטטוס</option>
             </select>
           </div>
           <div class="settings-row" style="border-bottom:none">
@@ -391,6 +389,7 @@
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user;
       currentSort = localStorage.getItem(sortKey()) || 'date';
+      if (currentSort === 'status') { currentSort = 'date'; localStorage.setItem(sortKey(), 'date'); }
       dueSoonThreshold = parseInt(localStorage.getItem(thresholdKey()) || '3');
       showOverdue = localStorage.getItem(showOverdueKey()) !== 'false';
       const hasUrl = await loadProfile();
@@ -1066,7 +1065,6 @@
           if (!grouped[key]) grouped[key] = [];
           grouped[key].push(a);
         }
-        const now = new Date();
         const hasUrgent = items => items.some(i => i.urgent && !i.completed);
         let sorted;
         if (currentSort === 'course') {
@@ -1075,22 +1073,6 @@
             const ub = hasUrgent(grouped[b]) ? 0 : 1;
             if (ua !== ub) return ua - ub;
             return (courseNameMap[a] || a).localeCompare(courseNameMap[b] || b, 'he');
-          });
-        } else if (currentSort === 'status') {
-          const calDaysFrom = d => Math.round(
-            (new Date(d.getFullYear(),d.getMonth(),d.getDate()) -
-             new Date(now.getFullYear(),now.getMonth(),now.getDate())) / 86400000
-          );
-          const urgencyOf = items => {
-            if (items.some(i => { if (i.completed||!i.due_date) return false; const d=new Date(i.due_date); return d<now||calDaysFrom(d)===0; })) return 0;
-            if (items.some(i => { if (i.completed||!i.due_date) return false; const d=new Date(i.due_date); return calDaysFrom(d)<=dueSoonThreshold; })) return 1;
-            return 2;
-          };
-          sorted = Object.keys(grouped).sort((a, b) => {
-            const ua = hasUrgent(grouped[a]) ? -1 : 0;
-            const ub = hasUrgent(grouped[b]) ? -1 : 0;
-            if (ua !== ub) return ua - ub;
-            return urgencyOf(grouped[a]) - urgencyOf(grouped[b]);
           });
         } else {
           const earliestOf = items => {
