@@ -591,6 +591,7 @@ body.dark .assignment-card.overdue {
 
 /* ── Dark mode fixes ── */
 body.dark .card-course-name { color: #a89cf7; }
+body.dark .course-header { color: #a89cf7; }
 body.dark .message.error  { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.3); }
 body.dark .message.success { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.3); }
 body.dark .modal-event-title { background: rgba(124,111,247,0.15); }
