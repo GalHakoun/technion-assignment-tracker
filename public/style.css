@@ -570,7 +570,7 @@ input:focus {
   border-inline-start-color: var(--error);
   background: #fef2f2;
 }
-body.dark .navbar-brand { color: #e8e4ff; }
+body.dark .navbar-brand { color: #7c6ff7; }
 
 body.dark .hero-banner {
   background: #1e1650;
