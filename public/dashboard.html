@@ -1045,6 +1045,21 @@
       const hidden = getHiddenCourses();
 
       function buildGroups(list, showHideBtn) {
+        if (currentSort === 'date') {
+          const sorted = list.slice().sort((a, b) => {
+            if (a.urgent && !b.urgent) return -1;
+            if (!a.urgent && b.urgent) return 1;
+            if (!a.due_date) return 1;
+            if (!b.due_date) return -1;
+            return new Date(a.due_date) - new Date(b.due_date);
+          });
+          let html = '';
+          for (const a of sorted) {
+            if (showHideBtn && hidden.has(a.course_name || '—')) continue;
+            html += renderCard(a, true);
+          }
+          return html;
+        }
         const grouped = {};
         for (const a of list) {
           const key = a.course_name || '—';
@@ -1148,7 +1163,7 @@
       await loadAssignments();
     }
 
-    function renderCard(a) {
+    function renderCard(a, showCourse = false) {
       const now = new Date();
       const due = a.due_date ? new Date(a.due_date) : null;
       let urgency = 'ok', countdown = '';
@@ -1189,6 +1204,7 @@
             ${a.completed ? '&#9989;' : '&#9711;'}
           </button>
           <div class="assignment-info">
+            ${showCourse && a.course_name ? `<div class="card-course-name">${escHtml(courseNameMap[a.course_name] || a.course_name)}</div>` : ''}
             <div class="assignment-title">${escHtml(a.title)}</div>
           </div>
           <div class="assignment-due">

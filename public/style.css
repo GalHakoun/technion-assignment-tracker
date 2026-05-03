@@ -582,6 +582,16 @@ body.dark .assignment-card.overdue {
 
 .assignment-info { flex: 1; min-width: 0; }
 
+.card-course-name {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .assignment-title {
   font-size: 0.9rem;
   font-weight: 500;
