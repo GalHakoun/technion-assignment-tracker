@@ -1,16 +1,25 @@
-const CACHE = 'technion-static-v6';
-const IMAGES = [
-  '/logo.png',
+const CACHE = 'checker-static-v7';
+
+const PRECACHE = [
+  '/index.html',
+  '/dashboard.html',
+  '/onboarding.html',
+  '/style.css',
+  '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
-  '/apple-touch-icon.png',
-  '/moodle-step3.png',
-  '/moodle-step4.png',
-  '/moodle-step5.png'
+  '/apple-touch-icon.png'
+];
+
+const IMAGES = [
+  '/logo.png',
+  '/moodle-step345.png'
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(IMAGES)));
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.addAll([...PRECACHE, ...IMAGES]))
+  );
   self.skipWaiting();
 });
 
@@ -26,28 +35,35 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // Always go to network for external services
+  // Always network for external services
   if (
     url.hostname.includes('supabase') ||
-    url.hostname.includes('cheesefork') ||
     url.hostname.includes('googleapis') ||
     url.hostname.includes('jsdelivr')
   ) return;
 
-  // Cache-first for images only (they never change)
-  if (/\.(png|jpg|jpeg|svg|ico|webp)$/.test(url.pathname)) {
+  // Stale-while-revalidate for HTML/CSS/JS — instant load from cache, update in background
+  if (/\.(html|css|js)$/.test(url.pathname) || url.pathname === '/') {
     e.respondWith(
-      caches.match(e.request).then(r => r || fetch(e.request).then(res => {
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
-        return res;
-      }))
+      caches.open(CACHE).then(cache =>
+        cache.match(e.request).then(cached => {
+          const network = fetch(e.request).then(res => {
+            cache.put(e.request, res.clone());
+            return res;
+          });
+          return cached || network;
+        })
+      )
     );
     return;
   }
 
-  // Network-first for HTML/CSS/JS — bypass HTTP cache, fall back to cache if offline
+  // Cache-first for images
   e.respondWith(
-    fetch(e.request, { cache: 'no-cache' }).catch(() => caches.match(e.request))
+    caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+      const clone = res.clone();
+      caches.open(CACHE).then(c => c.put(e.request, clone));
+      return res;
+    }))
   );
 });
