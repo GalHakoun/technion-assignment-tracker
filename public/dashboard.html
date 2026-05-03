@@ -1119,7 +1119,15 @@
 
       if (done.length) {
         html += `<div class="completed-toggle" onclick="toggleCompleted(this)">
-          &#9660; ${done.length} הושלמו
+          <span class="completed-toggle-label">&#9660; ${done.length} הושלמו</span>
+          <span class="completed-clear-wrap">
+            <button class="btn-clear-completed" onclick="event.stopPropagation();showClearConfirm(this)">נקה</button>
+            <span class="clear-confirm" style="display:none">
+              בטוח?
+              <button class="btn-clear-yes" onclick="event.stopPropagation();clearCompleted()">כן</button>
+              <button class="btn-clear-no" onclick="event.stopPropagation();hideClearConfirm(this)">לא</button>
+            </span>
+          </span>
         </div>
         <div class="completed-section" style="display:none">
           ${buildGroups(done, false)}
@@ -1134,7 +1142,30 @@
       const section = btn.nextElementSibling;
       const isOpen = section.style.display !== 'none';
       section.style.display = isOpen ? 'none' : 'block';
-      btn.innerHTML = `${isOpen ? '&#9660;' : '&#9650;'} ${btn.textContent.trim().split(' ').slice(1).join(' ')}`;
+      const label = btn.querySelector('.completed-toggle-label');
+      const arrow = isOpen ? '&#9660;' : '&#9650;';
+      const count = label.textContent.trim().split(' ').slice(1).join(' ');
+      label.innerHTML = `${arrow} ${count}`;
+    }
+
+    function showClearConfirm(btn) {
+      const wrap = btn.closest('.completed-clear-wrap');
+      btn.style.display = 'none';
+      wrap.querySelector('.clear-confirm').style.display = 'inline';
+    }
+
+    function hideClearConfirm(noBtn) {
+      const wrap = noBtn.closest('.completed-clear-wrap');
+      wrap.querySelector('.clear-confirm').style.display = 'none';
+      wrap.querySelector('.btn-clear-completed').style.display = 'inline';
+    }
+
+    async function clearCompleted() {
+      await sb.from('assignments')
+        .delete()
+        .eq('user_id', currentUser.id)
+        .eq('completed', true);
+      await loadAssignments();
     }
 
     async function toggleComplete(id, current) {
