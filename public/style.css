@@ -570,6 +570,19 @@ input:focus {
   border-inline-start-color: var(--error);
   background: #fef2f2;
 }
+body.dark .hero-banner {
+  background: #1e1650;
+  border-bottom-color: #2d2080;
+}
+body.dark .hero-greeting { color: #e8e4ff; }
+body.dark .hero-msg { color: #9ca3af; }
+body.dark .stat-tile {
+  background: #2a1f6e;
+  border-color: #3b2fa0;
+}
+body.dark .stat-num { color: #e8e4ff; }
+body.dark .stat-label { color: #9ca3af; }
+
 body.dark .assignment-card.overdue {
   background: #2d1010;
 }
