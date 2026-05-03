@@ -579,6 +579,8 @@ body.dark .assignment-card.overdue {
 .assignment-card.urgent  { border-inline-start-color: var(--error); }
 .assignment-card.urgent .due-date,
 .assignment-card.urgent .due-countdown { color: var(--error) !important; }
+.assignment-card.urgent .due-countdown { background: #fee2e2 !important; }
+body.dark .assignment-card.urgent .due-countdown { background: rgba(239,68,68,0.18) !important; }
 
 .assignment-info { flex: 1; min-width: 0; }
 
