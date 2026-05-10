@@ -19,6 +19,10 @@
     <div class="navbar-right">
       <button class="btn-logout" onclick="logout()">התנתק</button>
       <button class="btn-settings" onclick="openSettings()" title="Settings">&#9881;&#65039;</button>
+      <button class="btn-bell" id="bell-btn" onclick="openNotifModal()" title="התראות">
+        🔔
+        <span class="bell-dot"></span>
+      </button>
       <button class="btn-share" onclick="openShare()" title="שתף">
         <svg class="btn-mobile-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
@@ -275,6 +279,50 @@
     </div>
   </div>
 
+  <!-- Notification settings modal -->
+  <div class="modal-overlay" id="notif-overlay" style="display:none" onclick="if(event.target===this)closeNotifModal()">
+    <div class="modal-card notif-card">
+      <div class="modal-heading">🔔 התראות</div>
+
+      <div class="notif-status" id="notif-status">
+        <span class="notif-status-dot" id="notif-status-dot"></span>
+        <span id="notif-status-text">טוען...</span>
+      </div>
+
+      <div id="notif-supported">
+        <div class="notif-days-row">
+          <span>קבל התראה לפני הגשה</span>
+          <select class="notif-days-select" id="notif-days-select" onchange="onNotifDaysChange(this.value)">
+            <option value="0">ביום ההגשה</option>
+            <option value="1" selected>יום לפני</option>
+            <option value="2">יומיים לפני</option>
+            <option value="3">3 ימים לפני</option>
+            <option value="5">5 ימים לפני</option>
+            <option value="7">שבוע לפני</option>
+          </select>
+        </div>
+
+        <div class="notif-actions">
+          <button class="btn-notif-enable" id="btn-notif-enable" onclick="enableNotifications()">הפעל התראות</button>
+          <button class="btn-notif-disable" id="btn-notif-disable" style="display:none" onclick="disableNotifications()">כבה התראות</button>
+        </div>
+
+        <div class="notif-ios-note" id="notif-ios-note" style="display:none">
+          📱 ב-iPhone, יש להוסיף את Checker למסך הבית<br>כדי לקבל התראות.
+        </div>
+
+        <div id="notif-message" style="display:none;margin-top:0.75rem" class="message"></div>
+      </div>
+
+      <div id="notif-not-supported" style="display:none" class="notif-not-supported">
+        הדפדפן שלך אינו תומך בהתראות.<br>
+        נסה Chrome או Edge.
+      </div>
+
+      <button class="btn-yes" style="width:100%;margin-top:1.25rem" onclick="closeNotifModal()">סגור</button>
+    </div>
+  </div>
+
   <!-- Share modal -->
   <div class="modal-overlay" id="share-overlay" style="display:none" onclick="if(event.target===this)closeShare()">
     <div class="modal-card share-card">
@@ -401,6 +449,7 @@
       maybeAutoSync();
       setupRealtimeSync();
       setInterval(() => { if (!document.hidden) loadAssignments(); }, 30000);
+      initNotifications();
     }
 
     async function maybeShowMorning() {
@@ -1555,5 +1604,162 @@
   </script>
 
   <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
+
+  <!-- ── Push Notifications ── -->
+  <script>
+    const VAPID_PUBLIC_KEY = 'BI6cqAL5TCgiKid5eZ-VBl3BxHlYiHfmyJ5ua7MYoqRT4XCjkaLspQA7pO6bYKE9ogAIa5Zf-KtXBoJVF451pLs';
+
+    let notifSubscription = null;
+    let notifDays = 1;
+
+    function notifDaysKey() { return `notif_days_${currentUser?.id}`; }
+
+    function urlBase64ToUint8Array(b64) {
+      const pad = '='.repeat((4 - b64.length % 4) % 4);
+      const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+      return new Uint8Array([...raw].map(c => c.charCodeAt(0)));
+    }
+
+    async function initNotifications() {
+      notifDays = parseInt(localStorage.getItem(notifDaysKey()) || '1');
+
+      const supported = 'serviceWorker' in navigator && 'PushManager' in window;
+      if (!supported) return; // bell stays but modal will show unsupported
+
+      const sw = await navigator.serviceWorker.ready;
+      notifSubscription = await sw.pushManager.getSubscription();
+      updateNotifUI();
+    }
+
+    function updateNotifUI() {
+      const isOn = !!notifSubscription;
+      const bell = document.getElementById('bell-btn');
+      if (bell) bell.classList.toggle('active', isOn);
+    }
+
+    function openNotifModal() {
+      const supported = 'serviceWorker' in navigator && 'PushManager' in window;
+      document.getElementById('notif-overlay').style.display = 'flex';
+      document.getElementById('notif-supported').style.display = supported ? 'block' : 'none';
+      document.getElementById('notif-not-supported').style.display = supported ? 'none' : 'block';
+
+      if (!supported) return;
+
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+      document.getElementById('notif-ios-note').style.display = (isIOS && !isStandalone) ? 'block' : 'none';
+
+      refreshNotifModalState();
+    }
+
+    function refreshNotifModalState() {
+      const isOn = !!notifSubscription;
+      const denied = Notification.permission === 'denied';
+
+      document.getElementById('notif-status-dot').classList.toggle('on', isOn);
+      document.getElementById('notif-status-text').textContent = isOn
+        ? 'התראות פעילות ✓'
+        : denied ? 'הגישה נחסמה בדפדפן' : 'התראות כבויות';
+
+      document.getElementById('btn-notif-enable').style.display = isOn ? 'none' : 'block';
+      document.getElementById('btn-notif-enable').disabled = denied;
+      document.getElementById('btn-notif-disable').style.display = isOn ? 'block' : 'none';
+      document.getElementById('notif-days-select').value = String(notifDays);
+      document.getElementById('notif-message').style.display = 'none';
+    }
+
+    function closeNotifModal() {
+      document.getElementById('notif-overlay').style.display = 'none';
+    }
+
+    async function enableNotifications() {
+      const btn = document.getElementById('btn-notif-enable');
+      btn.disabled = true;
+      btn.textContent = 'מבקש הרשאה...';
+
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        btn.textContent = 'הפעל התראות';
+        btn.disabled = false;
+        showNotifMsg(
+          permission === 'denied'
+            ? 'חסמת התראות. שנה בהגדרות הדפדפן.'
+            : 'ההרשאה נדחתה.',
+          'error'
+        );
+        return;
+      }
+
+      try {
+        const sw = await navigator.serviceWorker.ready;
+        notifSubscription = await sw.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+
+        const { data: { session } } = await sb.auth.getSession();
+        await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + session.access_token,
+          },
+          body: JSON.stringify({ subscription: notifSubscription.toJSON(), notify_days_before: notifDays }),
+        });
+
+        updateNotifUI();
+        refreshNotifModalState();
+      } catch (err) {
+        showNotifMsg('שגיאה בהפעלת התראות: ' + err.message, 'error');
+        btn.textContent = 'הפעל התראות';
+        btn.disabled = false;
+      }
+    }
+
+    async function disableNotifications() {
+      if (!notifSubscription) return;
+      const endpoint = notifSubscription.endpoint;
+
+      await notifSubscription.unsubscribe().catch(() => {});
+      notifSubscription = null;
+
+      const { data: { session } } = await sb.auth.getSession();
+      await fetch('/api/subscribe', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + session.access_token,
+        },
+        body: JSON.stringify({ endpoint }),
+      });
+
+      updateNotifUI();
+      refreshNotifModalState();
+    }
+
+    async function onNotifDaysChange(val) {
+      notifDays = parseInt(val);
+      localStorage.setItem(notifDaysKey(), String(notifDays));
+
+      if (notifSubscription) {
+        const { data: { session } } = await sb.auth.getSession();
+        await fetch('/api/subscribe', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + session.access_token,
+          },
+          body: JSON.stringify({ endpoint: notifSubscription.endpoint, notify_days_before: notifDays }),
+        });
+      }
+    }
+
+    function showNotifMsg(text, type) {
+      const el = document.getElementById('notif-message');
+      el.textContent = text;
+      el.className = 'message ' + type;
+      el.style.display = 'block';
+    }
+  </script>
 </body>
 </html>

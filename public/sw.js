@@ -1,4 +1,4 @@
-const CACHE = 'checker-static-v7';
+const CACHE = 'checker-static-v8';
 
 const PRECACHE = [
   '/index.html',
@@ -65,5 +65,34 @@ self.addEventListener('fetch', e => {
       caches.open(CACHE).then(c => c.put(e.request, clone));
       return res;
     }))
+  );
+});
+
+// ── Push notifications ──
+
+self.addEventListener('push', e => {
+  let data = { title: 'Checker', body: 'יש לך מטלות ממתינות 📚' };
+  try { if (e.data) data = e.data.json(); } catch (_) {}
+
+  e.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      data: { url: '/dashboard.html' },
+      dir: 'rtl',
+      lang: 'he',
+    })
+  );
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      const existing = list.find(c => c.url.includes('/dashboard.html') && 'focus' in c);
+      if (existing) return existing.focus();
+      return clients.openWindow(e.notification.data?.url || '/dashboard.html');
+    })
   );
 });
