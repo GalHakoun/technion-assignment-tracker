@@ -410,7 +410,7 @@
       const year = now.getFullYear();
       const fileYear = month >= 9 ? year : year - 1;
       const sapSemester = month >= 9 ? 200 : 201;
-      const cacheKey = `course_names_${fileYear}_${sapSemester}`;
+      const cacheKey = `course_names_v2_${fileYear}_${sapSemester}`;
       const cached = localStorage.getItem(cacheKey);
       if (cached) {
         try { courseNameMap = JSON.parse(cached); } catch (_) {}
@@ -423,7 +423,12 @@
           for (const c of window.courses_from_rishum) {
             const num = c.general?.['מספר מקצוע'];
             const name = c.general?.['שם מקצוע'];
-            if (num && name) courseNameMap[num] = name;
+            if (num && name) {
+              courseNameMap[num] = name;
+              // Also index without leading zeros so "236703" matches "00236703"
+              const stripped = String(parseInt(num, 10));
+              courseNameMap[stripped] = name;
+            }
           }
           localStorage.setItem(cacheKey, JSON.stringify(courseNameMap));
           delete window.courses_from_rishum;
