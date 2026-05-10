@@ -11,26 +11,9 @@
   <meta name="apple-mobile-web-app-title" content="Checker">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <!-- Runs before style.css — prevents black flash and applies dark bg instantly -->
-  <script>if(localStorage.getItem('dark_mode')==='true')document.documentElement.setAttribute('data-dark','1')</script>
-  <style>html{background:#f8f9fa}html[data-dark='1']{background:#111827}</style>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <!-- Branded loading screen — visible instantly before JS runs -->
-  <div id="app-loader" style="
-    position:fixed;inset:0;z-index:9999;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.25rem;
-    background:inherit;transition:opacity .2s ease;">
-    <svg width="52" height="52" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="19" cy="19" r="17.5" fill="none" stroke="#7c6ff7" stroke-width="3"/>
-      <circle cx="19" cy="19" r="13.5" fill="#111111"/>
-      <polyline points="12,19 17,24.5 27,13" stroke="white" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    <div style="width:28px;height:28px;border:3px solid #e0dbff;border-top-color:#7c6ff7;border-radius:50%;animation:spin .7s linear infinite"></div>
-    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-  </div>
 
   <nav class="navbar">
     <div class="navbar-right">
@@ -404,41 +387,6 @@
     const showOverdueKey = () => `show_overdue_${currentUser.id}`;
     const syncFreqKey  = () => `sync_freq_${currentUser.id}`;
 
-    function loadCourseNames() {
-      const now = new Date();
-      const month = now.getMonth() + 1;
-      const year = now.getFullYear();
-      const fileYear = month >= 9 ? year : year - 1;
-      const sapSemester = month >= 9 ? 200 : 201;
-      const cacheKey = `course_names_v2_${fileYear}_${sapSemester}`;
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        try { courseNameMap = JSON.parse(cached); } catch (_) {}
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = `https://sap.cheesefork.cf/courses_${fileYear}_${sapSemester}.min.js`;
-      script.onload = () => {
-        if (window.courses_from_rishum) {
-          for (const c of window.courses_from_rishum) {
-            const num = c.general?.['מספר מקצוע'];
-            const name = c.general?.['שם מקצוע'];
-            if (num && name) {
-              courseNameMap[num] = name;
-              // Also index without leading zeros so "236703" matches "00236703"
-              const stripped = String(parseInt(num, 10));
-              courseNameMap[stripped] = name;
-            }
-          }
-          localStorage.setItem(cacheKey, JSON.stringify(courseNameMap));
-          delete window.courses_from_rishum;
-        }
-        loadAssignments();
-      };
-      script.onerror = () => {};
-      document.head.appendChild(script);
-    }
-
     function hiddenCoursesKey() { return `hidden_courses_${currentUser.id}`; }
     function getHiddenCourses() { return new Set(JSON.parse(localStorage.getItem(hiddenCoursesKey()) || '[]')); }
     function saveHiddenCourses(set) { localStorage.setItem(hiddenCoursesKey(), JSON.stringify([...set])); }
@@ -458,6 +406,31 @@
       openSettings();
     }
 
+    function loadCourseNames() {
+      return new Promise((resolve) => {
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const year = now.getFullYear();
+        // CheeseFork uses the year the academic year started (fall year)
+        const fileYear = month >= 9 ? year : year - 1;
+        const sapSemester = month >= 9 ? 200 : 201;
+        const script = document.createElement('script');
+        script.src = `https://sap.cheesefork.cf/courses_${fileYear}_${sapSemester}.min.js`;
+        script.onload = () => {
+          if (window.courses_from_rishum) {
+            for (const c of window.courses_from_rishum) {
+              const num = c.general?.['מספר מקצוע'];
+              const name = c.general?.['שם מקצוע'];
+              if (num && name) courseNameMap[num] = name;
+            }
+          }
+          resolve();
+        };
+        script.onerror = () => resolve();
+        document.head.appendChild(script);
+      });
+    }
+
     async function init() {
       applyDark(localStorage.getItem('dark_mode') === 'true');
       const { data: { session } } = await sb.auth.getSession();
@@ -469,22 +442,14 @@
       showOverdue = localStorage.getItem(showOverdueKey()) !== 'false';
       const hasUrl = await loadProfile();
       if (!hasUrl) { window.location.href = 'onboarding.html'; return; }
-      loadCourseNames();
+      await loadCourseNames();
       await loadAssignments();
-      hideLoader();
       await maybeShowMorning();
       await maybeShowWhatsNew();
       maybeAutoSync();
       setupRealtimeSync();
       setInterval(() => { if (!document.hidden) loadAssignments(); }, 30000);
       initNotifications();
-    }
-
-    function hideLoader() {
-      const el = document.getElementById('app-loader');
-      if (!el) return;
-      el.style.opacity = '0';
-      setTimeout(() => el.remove(), 200);
     }
 
     async function maybeShowMorning() {
@@ -1156,7 +1121,7 @@
             const ua = hasUrgent(grouped[a]) ? 0 : 1;
             const ub = hasUrgent(grouped[b]) ? 0 : 1;
             if (ua !== ub) return ua - ub;
-            return a.localeCompare(b, 'he');
+            return (courseNameMap[a] || a).localeCompare(courseNameMap[b] || b, 'he');
           });
         } else {
           const earliestOf = items => {
@@ -1420,7 +1385,8 @@
         return;
       }
 
-      const courseKey = course || null;
+      // Resolve display course name back to course key if possible
+      const courseKey = Object.entries(courseNameMap).find(([, name]) => name === course)?.[0] || course || null;
 
       const { error } = await sb.from('assignments').insert({
         user_id: currentUser.id,
