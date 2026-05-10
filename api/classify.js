@@ -97,10 +97,17 @@ module.exports = async function handler(req, res) {
     if (error) return res.status(500).json({ error: error.message });
   }
 
+  const _debug = (events || []).slice(0, 10).map(e => ({
+    title: e.title,
+    categories: e.raw_data?.categories,
+    extractCourse: extractCourse(e.title),
+  }));
+
   return res.status(200).json({
     success: true,
     homework_added: toInsert.length,
     uncertain_count: uncertain.length,
     uncertain_events: uncertain,
+    _debug,
   });
 };
