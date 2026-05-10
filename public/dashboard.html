@@ -12,8 +12,25 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
+  <!-- Runs before style.css — prevents black flash and applies dark bg instantly -->
+  <script>if(localStorage.getItem('dark_mode')==='true')document.documentElement.setAttribute('data-dark','1')</script>
+  <style>html{background:#f8f9fa}html[data-dark='1']{background:#111827}</style>
 </head>
 <body>
+
+  <!-- Branded loading screen — visible instantly before JS runs -->
+  <div id="app-loader" style="
+    position:fixed;inset:0;z-index:9999;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.25rem;
+    background:inherit;transition:opacity .2s ease;">
+    <svg width="52" height="52" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="19" cy="19" r="17.5" fill="none" stroke="#7c6ff7" stroke-width="3"/>
+      <circle cx="19" cy="19" r="13.5" fill="#111111"/>
+      <polyline points="12,19 17,24.5 27,13" stroke="white" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div style="width:28px;height:28px;border:3px solid #e0dbff;border-top-color:#7c6ff7;border-radius:50%;animation:spin .7s linear infinite"></div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+  </div>
 
   <nav class="navbar">
     <div class="navbar-right">
@@ -444,12 +461,20 @@
       if (!hasUrl) { window.location.href = 'onboarding.html'; return; }
       await loadCourseNames();
       await loadAssignments();
+      hideLoader();
       await maybeShowMorning();
       await maybeShowWhatsNew();
       maybeAutoSync();
       setupRealtimeSync();
       setInterval(() => { if (!document.hidden) loadAssignments(); }, 30000);
       initNotifications();
+    }
+
+    function hideLoader() {
+      const el = document.getElementById('app-loader');
+      if (!el) return;
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 200);
     }
 
     async function maybeShowMorning() {
