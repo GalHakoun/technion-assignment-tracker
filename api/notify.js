@@ -1,7 +1,16 @@
 const { createClient } = require('@supabase/supabase-js');
 const { Resend } = require('resend');
+const webpush = require('web-push');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT || 'mailto:admin@checker.app',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
 
 module.exports = async function handler(req, res) {
   if (process.env.CRON_SECRET && req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -28,6 +37,7 @@ module.exports = async function handler(req, res) {
   const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   let sent = 0;
 
+  // ── Email notifications ──
   for (const profile of profiles) {
     const email = emailMap[profile.user_id];
     if (!email) continue;
@@ -115,6 +125,45 @@ module.exports = async function handler(req, res) {
       .eq('user_id', profile.user_id);
 
     sent++;
+  }
+
+  // ── Push notifications ──
+  if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    const { data: pushSubs } = await sb
+      .from('push_subscriptions')
+      .select('user_id, endpoint, subscription, notify_days_before');
+
+    for (const sub of (pushSubs || [])) {
+      const deadline = new Date(now.getTime() + sub.notify_days_before * 24 * 60 * 60 * 1000);
+
+      const { data: upcoming } = await sb
+        .from('assignments')
+        .select('title')
+        .eq('user_id', sub.user_id)
+        .eq('completed', false)
+        .gte('due_date', now.toISOString())
+        .lte('due_date', deadline.toISOString())
+        .order('due_date', { ascending: true });
+
+      if (!upcoming?.length) continue;
+
+      const count = upcoming.length;
+      const body = count === 1
+        ? `"${upcoming[0].title}" — בקרוב!`
+        : `${count} מטלות שצריך להגיש ב-${sub.notify_days_before} הימים הקרובים`;
+
+      try {
+        await webpush.sendNotification(
+          sub.subscription,
+          JSON.stringify({ title: `Checker — ${count} מטלות ממתינות 📚`, body })
+        );
+      } catch (err) {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          // Subscription expired — clean it up
+          await sb.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+        }
+      }
+    }
   }
 
   return res.status(200).json({ success: true, sent });
