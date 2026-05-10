@@ -52,13 +52,23 @@ module.exports = async function handler(req, res) {
   const [{ data: events }, { data: remembered }, { data: existing }] = await Promise.all([
     sb.from('raw_events').select('id, title, description, start_time, raw_data').eq('user_id', user.id),
     sb.from('classifications').select('normalized_title, classification').eq('user_id', user.id),
-    sb.from('assignments').select('raw_event_id').eq('user_id', user.id),
+    sb.from('assignments').select('id, raw_event_id, course_name').eq('user_id', user.id),
   ]);
 
   const rememberedMap = {};
   (remembered || []).forEach(c => { rememberedMap[c.normalized_title] = c.classification; });
 
   const existingSet = new Set((existing || []).map(a => a.raw_event_id));
+
+  // Repair assignments that have a semester code ("200"/"201") instead of a course name
+  const eventById = Object.fromEntries((events || []).map(e => [e.id, e]));
+  for (const a of (existing || [])) {
+    if (/^\d+$/.test(a.course_name)) {
+      const event = eventById[a.raw_event_id];
+      const fixed = event ? extractCourse(event.title) : null;
+      if (fixed) await sb.from('assignments').update({ course_name: fixed }).eq('id', a.id);
+    }
+  }
 
   const toInsert = [];
   const uncertain = [];
@@ -70,24 +80,20 @@ module.exports = async function handler(req, res) {
     const result = rememberedMap[normalizedTitle] || classify(event.title, event.description);
 
     if (result === 'homework') {
-      const cat = event.raw_data?.categories?.[0];
-      const courseNum = cat ? cat.split('.')[0] : null;
       toInsert.push({
         user_id: user.id,
         raw_event_id: event.id,
         title: event.title,
-        course_name: courseNum || extractCourse(event.title),
+        course_name: extractCourse(event.title),
         due_date: event.start_time,
       });
     } else if (result === 'uncertain') {
-      const cat = event.raw_data?.categories?.[0];
-      const courseNum = cat ? cat.split('.')[0] : null;
       uncertain.push({
         id: event.id,
         title: event.title,
         due_date: event.start_time,
         normalized_title: normalizedTitle,
-        course_name: courseNum || extractCourse(event.title),
+        course_name: extractCourse(event.title),
       });
     }
   }
