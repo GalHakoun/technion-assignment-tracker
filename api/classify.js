@@ -52,26 +52,13 @@ module.exports = async function handler(req, res) {
   const [{ data: events }, { data: remembered }, { data: existing }] = await Promise.all([
     sb.from('raw_events').select('id, title, description, start_time, raw_data').eq('user_id', user.id),
     sb.from('classifications').select('normalized_title, classification').eq('user_id', user.id),
-    sb.from('assignments').select('id, raw_event_id, course_name').eq('user_id', user.id),
+    sb.from('assignments').select('raw_event_id').eq('user_id', user.id),
   ]);
 
   const rememberedMap = {};
   (remembered || []).forEach(c => { rememberedMap[c.normalized_title] = c.classification; });
 
   const existingSet = new Set((existing || []).map(a => a.raw_event_id));
-
-  // Fix existing assignments that have a course number instead of a name
-  const eventMap = Object.fromEntries((events || []).map(e => [e.id, e]));
-  const toFix = (existing || []).filter(a => /^\d+$/.test(a.course_name));
-  for (const a of toFix) {
-    const event = eventMap[a.raw_event_id];
-    if (!event) continue;
-    const cat = event.raw_data?.categories?.[0];
-    const courseName = cat ? (cat.split('.').slice(1).join('.') || null) : null;
-    if (courseName) {
-      await sb.from('assignments').update({ course_name: courseName }).eq('id', a.id);
-    }
-  }
 
   const toInsert = [];
   const uncertain = [];
@@ -84,23 +71,23 @@ module.exports = async function handler(req, res) {
 
     if (result === 'homework') {
       const cat = event.raw_data?.categories?.[0];
-      const courseName = cat ? (cat.split('.').slice(1).join('.') || cat) : null;
+      const courseNum = cat ? cat.split('.')[0] : null;
       toInsert.push({
         user_id: user.id,
         raw_event_id: event.id,
         title: event.title,
-        course_name: courseName || extractCourse(event.title),
+        course_name: courseNum || extractCourse(event.title),
         due_date: event.start_time,
       });
     } else if (result === 'uncertain') {
       const cat = event.raw_data?.categories?.[0];
-      const courseName = cat ? (cat.split('.').slice(1).join('.') || cat) : null;
+      const courseNum = cat ? cat.split('.')[0] : null;
       uncertain.push({
         id: event.id,
         title: event.title,
         due_date: event.start_time,
         normalized_title: normalizedTitle,
-        course_name: courseName || extractCourse(event.title),
+        course_name: courseNum || extractCourse(event.title),
       });
     }
   }

@@ -390,6 +390,7 @@
     let currentUser = null;
     let uncertainQueue = [];
     let uncertainIndex = 0;
+    let courseNameMap = {};
     let lastAssignments = [];
     let currentSort = 'date';
     let currentCourseFilters = new Set();
@@ -402,6 +403,36 @@
     const thresholdKey = () => `due_soon_days_${currentUser.id}`;
     const showOverdueKey = () => `show_overdue_${currentUser.id}`;
     const syncFreqKey  = () => `sync_freq_${currentUser.id}`;
+
+    function loadCourseNames() {
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+      const fileYear = month >= 9 ? year : year - 1;
+      const sapSemester = month >= 9 ? 200 : 201;
+      const cacheKey = `course_names_${fileYear}_${sapSemester}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try { courseNameMap = JSON.parse(cached); } catch (_) {}
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = `https://sap.cheesefork.cf/courses_${fileYear}_${sapSemester}.min.js`;
+      script.onload = () => {
+        if (window.courses_from_rishum) {
+          for (const c of window.courses_from_rishum) {
+            const num = c.general?.['מספר מקצוע'];
+            const name = c.general?.['שם מקצוע'];
+            if (num && name) courseNameMap[num] = name;
+          }
+          localStorage.setItem(cacheKey, JSON.stringify(courseNameMap));
+          delete window.courses_from_rishum;
+        }
+        loadAssignments();
+      };
+      script.onerror = () => {};
+      document.head.appendChild(script);
+    }
 
     function hiddenCoursesKey() { return `hidden_courses_${currentUser.id}`; }
     function getHiddenCourses() { return new Set(JSON.parse(localStorage.getItem(hiddenCoursesKey()) || '[]')); }
@@ -433,6 +464,7 @@
       showOverdue = localStorage.getItem(showOverdueKey()) !== 'false';
       const hasUrl = await loadProfile();
       if (!hasUrl) { window.location.href = 'onboarding.html'; return; }
+      loadCourseNames();
       await loadAssignments();
       hideLoader();
       await maybeShowMorning();
@@ -589,7 +621,7 @@
       if (hidden.size === 0) { section.style.display = 'none'; return; }
       section.style.display = 'block';
       list.innerHTML = [...hidden].map(course => {
-        const name = course;
+        const name = courseNameMap[course] || course;
         return `<div class="hidden-course-row">
           <span>${escHtml(name)}</span>
           <button class="btn-unhide" onclick="unhideCourse('${escHtml(course)}')">הצג</button>
@@ -909,7 +941,7 @@
       const timeStr = due
         ? due.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
         : null;
-      const courseName = a.course_name || '';
+      const courseName = courseNameMap[a.course_name] || a.course_name || '';
 
       return `
         <div class="pinned-card urgency-${urgencyClass}">
@@ -979,7 +1011,7 @@
         label.textContent = 'כל הקורסים';
       } else if (currentCourseFilters.size === 1) {
         const course = [...currentCourseFilters][0];
-        label.textContent = course;
+        label.textContent = courseNameMap[course] || course;
       } else {
         label.textContent = `${currentCourseFilters.size} קורסים`;
       }
@@ -989,14 +1021,14 @@
       const hidden = getHiddenCourses();
       const courses = [...new Set(assignments.map(a => a.course_name || '—'))]
         .filter(c => !hidden.has(c))
-        .sort((a, b) => a.localeCompare(b, 'he'));
+        .sort((a, b) => (courseNameMap[a] || a).localeCompare(courseNameMap[b] || b, 'he'));
       for (const f of currentCourseFilters) {
         if (!courses.includes(f)) currentCourseFilters.delete(f);
       }
       const menu = document.getElementById('course-dropdown-menu');
       if (!menu) return;
       menu.innerHTML = courses.map(c => {
-        const name = escHtml(c);
+        const name = escHtml(courseNameMap[c] || c);
         const checked = currentCourseFilters.has(c) ? 'checked' : '';
         return `<label class="course-check-item">
           <input type="checkbox" ${checked} onchange="toggleCourseFilter('${escHtml(c)}', this.checked)">
@@ -1069,7 +1101,7 @@
       if (searchQuery) {
         visible = visible.filter(a => {
           const title = (a.title || '').toLowerCase();
-          const course = (a.course_name || '').toLowerCase();
+          const course = (courseNameMap[a.course_name] || a.course_name || '').toLowerCase();
           return title.includes(searchQuery) || course.includes(searchQuery);
         });
       }
@@ -1136,7 +1168,7 @@
         let html = '';
         for (const course of sorted) {
           if (showHideBtn && hidden.has(course)) continue;
-          const displayName = course;
+          const displayName = courseNameMap[course] || course;
           const hideBtn = showHideBtn
             ? `<button class="btn-hide-course" onclick="hideCourse('${escHtml(course)}')" title="הסתר קורס">&#10005;</button>`
             : '';
@@ -1264,7 +1296,7 @@
             ${a.completed ? '&#9989;' : '&#9711;'}
           </button>
           <div class="assignment-info">
-            ${showCourse && a.course_name ? `<div class="card-course-name">${escHtml(a.course_name)}</div>` : ''}
+            ${showCourse && a.course_name ? `<div class="card-course-name">${escHtml(courseNameMap[a.course_name] || a.course_name)}</div>` : ''}
             <div class="assignment-title">${escHtml(a.title)}</div>
           </div>
           <div class="assignment-due">
