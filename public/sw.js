@@ -42,8 +42,21 @@ self.addEventListener('fetch', e => {
     url.hostname.includes('jsdelivr')
   ) return;
 
-  // Stale-while-revalidate for HTML/CSS/JS — instant load from cache, update in background
-  if (/\.(html|css|js)$/.test(url.pathname) || url.pathname === '/') {
+  // Network-first for HTML — always serve fresh content, fall back to cache when offline
+  if (/\.html$/.test(url.pathname) || url.pathname === '/') {
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
+          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+          return res;
+        })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Stale-while-revalidate for CSS/JS — instant load from cache, update in background
+  if (/\.(css|js)$/.test(url.pathname)) {
     e.respondWith(
       caches.open(CACHE).then(cache =>
         cache.match(e.request).then(cached => {
