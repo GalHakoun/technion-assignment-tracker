@@ -106,7 +106,7 @@
       <div class="filter-bar" id="filter-bar" style="display:none">
         <div class="filter-group">
           <label class="filter-label">מיין</label>
-          <select class="filter-select" id="sort-select" onchange="currentSort=this.value;localStorage.setItem(sortKey(),this.value);renderAssignments(lastAssignments)">
+          <select class="filter-select" id="sort-select" onchange="saveSetting('sort',this.value)">
             <option value="date">לפי תאריך</option>
             <option value="course">לפי קורס</option>
           </select>
@@ -504,7 +504,7 @@
       if (!profile) { window.location.href = 'onboarding.html'; return; }
 
       // Supabase is source of truth — override localStorage with DB values
-      if (profile.default_sort) {
+      if (profile.default_sort != null) {
         currentSort = profile.default_sort;
         localStorage.setItem(sortKey(), currentSort);
         document.getElementById('sort-select').value = currentSort;
