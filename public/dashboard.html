@@ -503,21 +503,22 @@
       const profile = await loadProfile();
       if (!profile) { window.location.href = 'onboarding.html'; return; }
 
-      // Supabase is source of truth — override localStorage with DB values
-      if (profile.default_sort != null) {
+      // Supabase fills in settings only when localStorage has no value (new device)
+      // Same device always uses localStorage (written synchronously on every change)
+      if (!localStorage.getItem(sortKey()) && profile.default_sort != null) {
         currentSort = profile.default_sort;
         localStorage.setItem(sortKey(), currentSort);
         document.getElementById('sort-select').value = currentSort;
       }
-      if (profile.due_soon_days != null) {
+      if (!localStorage.getItem(thresholdKey()) && profile.due_soon_days != null) {
         dueSoonThreshold = profile.due_soon_days;
         localStorage.setItem(thresholdKey(), String(dueSoonThreshold));
       }
-      if (profile.show_overdue != null) {
+      if (!localStorage.getItem(showOverdueKey()) && profile.show_overdue != null) {
         showOverdue = profile.show_overdue;
         localStorage.setItem(showOverdueKey(), String(showOverdue));
       }
-      if (profile.hidden_courses?.length) {
+      if (!localStorage.getItem(hiddenCoursesKey()) && profile.hidden_courses?.length) {
         saveHiddenCourses(new Set(profile.hidden_courses));
       }
 
