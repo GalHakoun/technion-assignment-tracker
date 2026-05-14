@@ -1375,20 +1375,22 @@
       document.getElementById('add-due').value = '';
       document.getElementById('add-message').style.display = 'none';
 
-      // Populate course suggestions from existing assignments
-      const { data } = { data: null }; // populated below
-      const existing = document.querySelectorAll('.course-header');
+      // Populate course suggestions from lastAssignments, deduplicated and sorted
       const datalist = document.getElementById('course-suggestions');
       datalist.innerHTML = '';
-      const seen = new Set();
-      existing.forEach(el => {
-        const name = el.textContent.trim().replace('×', '').trim();
-        if (name && !seen.has(name)) {
-          seen.add(name);
-          const opt = document.createElement('option');
-          opt.value = name;
-          datalist.appendChild(opt);
-        }
+      const seenKeys = new Set();
+      const courseOptions = [];
+      for (const a of (lastAssignments || [])) {
+        const key = a.course_name;
+        if (!key || seenKeys.has(key)) continue;
+        seenKeys.add(key);
+        courseOptions.push(courseNameMap[key] || key);
+      }
+      courseOptions.sort((a, b) => a.localeCompare(b, 'he'));
+      courseOptions.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        datalist.appendChild(opt);
       });
 
       document.getElementById('add-overlay').style.display = 'flex';
