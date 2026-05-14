@@ -2063,6 +2063,17 @@ body.dark .pinned-card.urgency-done {
 
 .notif-status-dot.on { background: var(--success); }
 
+.notif-section {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 1rem 0 0.25rem;
+}
+
+.notif-section:first-of-type { margin-top: 0.25rem; }
+
 .notif-days-row {
   display: flex;
   align-items: center;

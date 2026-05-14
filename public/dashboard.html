@@ -304,30 +304,10 @@
     <div class="modal-card notif-card">
       <div class="modal-heading">🔔 התראות</div>
 
-      <div class="notif-row" id="notif-push-row">
-        <div class="notif-row-info">
-          <div class="notif-row-title">🔔 התראת דפדפן</div>
-          <div class="notif-row-sub" id="notif-push-sub">כבוי</div>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="notif-push-toggle" onchange="onPushToggle(this.checked)">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-
-      <div class="notif-row">
-        <div class="notif-row-info">
-          <div class="notif-row-title">📧 סיכום יומי במייל</div>
-          <div class="notif-row-sub" id="notif-email-sub">כבוי</div>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="notif-email-toggle" onchange="onEmailToggle(this.checked)">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-
-      <div class="notif-days-row" id="notif-days-row" style="display:none">
-        <span>קבל התראה לפני הגשה</span>
+      <!-- Due-soon section -->
+      <div class="notif-section">התראות הגשה</div>
+      <div class="notif-days-row">
+        <span>כמה ימים לפני?</span>
         <select class="notif-days-select" id="notif-days-select" onchange="onNotifDaysChange(this.value)">
           <option value="0">ביום ההגשה</option>
           <option value="1">יום לפני</option>
@@ -336,6 +316,45 @@
           <option value="5">5 ימים לפני</option>
           <option value="7">שבוע לפני</option>
         </select>
+      </div>
+      <div class="notif-row">
+        <div class="notif-row-info">
+          <div class="notif-row-title">📧 אימייל</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notif-due-email" onchange="onDueEmailToggle(this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="notif-row">
+        <div class="notif-row-info">
+          <div class="notif-row-title">🔔 התראת דפדפן</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notif-due-push" onchange="onDuePushToggle(this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- Daily summary section -->
+      <div class="notif-section">סיכום יומי</div>
+      <div class="notif-row">
+        <div class="notif-row-info">
+          <div class="notif-row-title">📧 אימייל</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notif-summary-email" onchange="onSummaryEmailToggle(this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="notif-row">
+        <div class="notif-row-info">
+          <div class="notif-row-title">🔔 התראת דפדפן</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notif-summary-push" onchange="onSummaryPushToggle(this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
       </div>
 
       <div class="notif-ios-note" id="notif-ios-note" style="display:none">
@@ -1657,7 +1676,10 @@
 
     let notifSubscription = null;
     let notifDays = 1;
-    let notifEmailEnabled = false;
+    let notifDueEmail = false;
+    let notifDuePush = false;
+    let notifSummaryEmail = false;
+    let notifSummaryPush = false;
 
     function urlBase64ToUint8Array(b64) {
       const pad = '='.repeat((4 - b64.length % 4) % 4);
@@ -1667,24 +1689,24 @@
 
     async function initNotifications() {
       const { data } = await sb.from('profiles')
-        .select('notify_email, notify_days_before')
-        .eq('user_id', currentUser.id)
-        .single();
-      notifEmailEnabled = data?.notify_email === true;
+        .select('notify_days_before, notify_due_email, notify_due_push, notify_summary_email, notify_summary_push')
+        .eq('user_id', currentUser.id).single();
       notifDays = data?.notify_days_before || 1;
+      notifDueEmail = data?.notify_due_email === true;
+      notifDuePush = data?.notify_due_push === true;
+      notifSummaryEmail = data?.notify_summary_email === true;
+      notifSummaryPush = data?.notify_summary_push === true;
 
-      const supported = 'serviceWorker' in navigator && 'PushManager' in window;
-      if (!supported) return;
-      const sw = await navigator.serviceWorker.ready;
-      notifSubscription = await sw.pushManager.getSubscription();
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+        const sw = await navigator.serviceWorker.ready;
+        notifSubscription = await sw.pushManager.getSubscription();
+      }
       updateBellUI();
     }
 
     function updateBellUI() {
-      const anyOn = !!notifSubscription || notifEmailEnabled;
+      const anyOn = notifDueEmail || notifDuePush || notifSummaryEmail || notifSummaryPush;
       document.getElementById('bell-btn')?.classList.toggle('active', anyOn);
-      const daysRow = document.getElementById('notif-days-row');
-      if (daysRow) daysRow.style.display = anyOn ? 'flex' : 'none';
     }
 
     function openNotifModal() {
@@ -1695,70 +1717,91 @@
       const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
       document.getElementById('notif-ios-note').style.display = (isIOS && !isStandalone) ? 'block' : 'none';
 
-      const pushOn = !!notifSubscription;
-      document.getElementById('notif-push-toggle').checked = pushOn;
-      document.getElementById('notif-push-sub').textContent = pushOn ? 'פעיל ✓' : 'כבוי';
-
-      document.getElementById('notif-email-toggle').checked = notifEmailEnabled;
-      document.getElementById('notif-email-sub').textContent = notifEmailEnabled ? 'פעיל ✓' : 'כבוי';
-
+      document.getElementById('notif-due-email').checked = notifDueEmail;
+      document.getElementById('notif-due-push').checked = notifDuePush;
+      document.getElementById('notif-summary-email').checked = notifSummaryEmail;
+      document.getElementById('notif-summary-push').checked = notifSummaryPush;
       document.getElementById('notif-days-select').value = String(notifDays);
-      updateBellUI();
     }
 
     function closeNotifModal() {
       document.getElementById('notif-overlay').style.display = 'none';
     }
 
-    async function onPushToggle(enable) {
-      document.getElementById('notif-push-sub').textContent = 'שומר...';
-      if (enable) {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
-          document.getElementById('notif-push-toggle').checked = false;
-          document.getElementById('notif-push-sub').textContent = 'כבוי';
-          showNotifMsg(permission === 'denied' ? 'חסמת התראות בדפדפן — שנה בהגדרות.' : 'ההרשאה נדחתה.', 'error');
-          return;
-        }
-        try {
-          const sw = await navigator.serviceWorker.ready;
-          notifSubscription = await sw.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-          });
-          const { data: { session } } = await sb.auth.getSession();
-          await fetch('/api/subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
-            body: JSON.stringify({ subscription: notifSubscription.toJSON(), notify_days_before: notifDays }),
-          });
-          document.getElementById('notif-push-sub').textContent = 'פעיל ✓';
-        } catch (err) {
-          document.getElementById('notif-push-toggle').checked = false;
-          document.getElementById('notif-push-sub').textContent = 'כבוי';
-          showNotifMsg('שגיאה: ' + err.message, 'error');
-        }
-      } else {
-        if (notifSubscription) {
-          const endpoint = notifSubscription.endpoint;
-          await notifSubscription.unsubscribe().catch(() => {});
-          notifSubscription = null;
-          const { data: { session } } = await sb.auth.getSession();
-          await fetch('/api/subscribe', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
-            body: JSON.stringify({ endpoint }),
-          });
-        }
-        document.getElementById('notif-push-sub').textContent = 'כבוי';
+    async function ensurePushSubscribed() {
+      if (notifSubscription) return true;
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        showNotifMsg(permission === 'denied' ? 'חסמת התראות בדפדפן — שנה בהגדרות.' : 'ההרשאה נדחתה.', 'error');
+        return false;
       }
+      try {
+        const sw = await navigator.serviceWorker.ready;
+        notifSubscription = await sw.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+        const { data: { session } } = await sb.auth.getSession();
+        await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+          body: JSON.stringify({ subscription: notifSubscription.toJSON(), notify_days_before: notifDays }),
+        });
+        return true;
+      } catch (err) {
+        showNotifMsg('שגיאה: ' + err.message, 'error');
+        return false;
+      }
+    }
+
+    async function maybeUnsubscribePush() {
+      if (!notifSubscription || notifDuePush || notifSummaryPush) return;
+      const endpoint = notifSubscription.endpoint;
+      await notifSubscription.unsubscribe().catch(() => {});
+      notifSubscription = null;
+      const { data: { session } } = await sb.auth.getSession();
+      await fetch('/api/subscribe', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+        body: JSON.stringify({ endpoint }),
+      });
+    }
+
+    async function onDueEmailToggle(enable) {
+      notifDueEmail = enable;
+      await sb.from('profiles').update({ notify_due_email: enable }).eq('user_id', currentUser.id);
       updateBellUI();
     }
 
-    async function onEmailToggle(enable) {
-      notifEmailEnabled = enable;
-      document.getElementById('notif-email-sub').textContent = enable ? 'פעיל ✓' : 'כבוי';
-      await sb.from('profiles').update({ notify_email: enable }).eq('user_id', currentUser.id);
+    async function onDuePushToggle(enable) {
+      if (enable) {
+        const ok = await ensurePushSubscribed();
+        if (!ok) { document.getElementById('notif-due-push').checked = false; return; }
+        notifDuePush = true;
+      } else {
+        notifDuePush = false;
+        await maybeUnsubscribePush();
+      }
+      await sb.from('profiles').update({ notify_due_push: notifDuePush }).eq('user_id', currentUser.id);
+      updateBellUI();
+    }
+
+    async function onSummaryEmailToggle(enable) {
+      notifSummaryEmail = enable;
+      await sb.from('profiles').update({ notify_summary_email: enable }).eq('user_id', currentUser.id);
+      updateBellUI();
+    }
+
+    async function onSummaryPushToggle(enable) {
+      if (enable) {
+        const ok = await ensurePushSubscribed();
+        if (!ok) { document.getElementById('notif-summary-push').checked = false; return; }
+        notifSummaryPush = true;
+      } else {
+        notifSummaryPush = false;
+        await maybeUnsubscribePush();
+      }
+      await sb.from('profiles').update({ notify_summary_push: notifSummaryPush }).eq('user_id', currentUser.id);
       updateBellUI();
     }
 
