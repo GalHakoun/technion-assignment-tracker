@@ -305,7 +305,13 @@
       <div class="modal-heading">🔔 התראות</div>
 
       <!-- Due-soon section -->
-      <div class="notif-section">התראות הגשה</div>
+      <div class="notif-section">
+        התראות הגשה
+        <button class="notif-info-btn" onclick="toggleNotifInfo('due')">i</button>
+      </div>
+      <div class="notif-info-text" id="notif-info-due" style="display:none">
+        נשלחת רק כאשר יש מטלות שמועד הגשתן קרב. תקבל/י התראה לפי מספר הימים שבחרת — אם אין מטלות בחלון הזמן, לא נשלח כלום.
+      </div>
       <div class="notif-days-row">
         <span>כמה ימים לפני?</span>
         <select class="notif-days-select" id="notif-days-select" onchange="onNotifDaysChange(this.value)">
@@ -337,7 +343,13 @@
       </div>
 
       <!-- Daily summary section -->
-      <div class="notif-section">סיכום יומי</div>
+      <div class="notif-section">
+        סיכום יומי
+        <button class="notif-info-btn" onclick="toggleNotifInfo('summary')">i</button>
+      </div>
+      <div class="notif-info-text" id="notif-info-summary" style="display:none">
+        נשלח כל בוקר ב-07:00 עם רשימת כל המטלות הממתינות שלך — ללא קשר לתאריכי ההגשה. תמיד נשלח, גם אם אין מטלות קרובות.
+      </div>
       <div class="notif-row">
         <div class="notif-row-info">
           <div class="notif-row-title">📧 אימייל</div>
@@ -1726,6 +1738,11 @@
 
     function closeNotifModal() {
       document.getElementById('notif-overlay').style.display = 'none';
+    }
+
+    function toggleNotifInfo(type) {
+      const el = document.getElementById('notif-info-' + type);
+      el.style.display = el.style.display === 'none' ? 'block' : 'none';
     }
 
     async function ensurePushSubscribed() {

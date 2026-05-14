@@ -2064,6 +2064,9 @@ body.dark .pinned-card.urgency-done {
 .notif-status-dot.on { background: var(--success); }
 
 .notif-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -2073,6 +2076,39 @@ body.dark .pinned-card.urgency-done {
 }
 
 .notif-section:first-of-type { margin-top: 0.25rem; }
+
+.notif-info-btn {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-style: italic;
+  font-family: Georgia, serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.notif-info-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.notif-info-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  margin-bottom: 0.4rem;
+  line-height: 1.55;
+}
 
 .notif-days-row {
   display: flex;
