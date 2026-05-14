@@ -445,7 +445,10 @@
 
     function hiddenCoursesKey() { return `hidden_courses_${currentUser.id}`; }
     function getHiddenCourses() { return new Set(JSON.parse(localStorage.getItem(hiddenCoursesKey()) || '[]')); }
-    function saveHiddenCourses(set) { localStorage.setItem(hiddenCoursesKey(), JSON.stringify([...set])); }
+    function saveHiddenCourses(set) {
+      localStorage.setItem(hiddenCoursesKey(), JSON.stringify([...set]));
+      sb.from('profiles').update({ hidden_courses: [...set] }).eq('user_id', currentUser.id);
+    }
 
     function hideCourse(courseKey) {
       const hidden = getHiddenCourses();
@@ -497,8 +500,27 @@
       document.getElementById('sort-select').value = currentSort;
       dueSoonThreshold = parseInt(localStorage.getItem(thresholdKey()) || '3');
       showOverdue = localStorage.getItem(showOverdueKey()) !== 'false';
-      const hasUrl = await loadProfile();
-      if (!hasUrl) { window.location.href = 'onboarding.html'; return; }
+      const profile = await loadProfile();
+      if (!profile) { window.location.href = 'onboarding.html'; return; }
+
+      // Supabase is source of truth — override localStorage with DB values
+      if (profile.default_sort) {
+        currentSort = profile.default_sort;
+        localStorage.setItem(sortKey(), currentSort);
+        document.getElementById('sort-select').value = currentSort;
+      }
+      if (profile.due_soon_days != null) {
+        dueSoonThreshold = profile.due_soon_days;
+        localStorage.setItem(thresholdKey(), String(dueSoonThreshold));
+      }
+      if (profile.show_overdue != null) {
+        showOverdue = profile.show_overdue;
+        localStorage.setItem(showOverdueKey(), String(showOverdue));
+      }
+      if (profile.hidden_courses?.length) {
+        saveHiddenCourses(new Set(profile.hidden_courses));
+      }
+
       await loadCourseNames();
       await loadAssignments();
       hideLoader();
@@ -621,14 +643,14 @@
     async function loadProfile() {
       const { data } = await sb
         .from('profiles')
-        .select('moodle_ical_url')
+        .select('moodle_ical_url, default_sort, due_soon_days, show_overdue, hidden_courses')
         .eq('user_id', currentUser.id)
         .single();
       if (data?.moodle_ical_url) {
         document.getElementById('settings-moodle-url').value = data.moodle_ical_url;
-        return true;
+        return data;
       }
-      return false;
+      return null;
     }
 
     function openSettings() {
@@ -670,10 +692,12 @@
         localStorage.setItem(sortKey(), value);
         document.getElementById('sort-select').value = value;
         renderAssignments(lastAssignments);
+        sb.from('profiles').update({ default_sort: value }).eq('user_id', currentUser.id);
       } else if (key === 'threshold') {
         dueSoonThreshold = parseInt(value);
         localStorage.setItem(thresholdKey(), value);
         renderAssignments(lastAssignments);
+        sb.from('profiles').update({ due_soon_days: parseInt(value) }).eq('user_id', currentUser.id);
       } else if (key === 'syncFreq') {
         localStorage.setItem(syncFreqKey(), value);
       }
@@ -695,6 +719,7 @@
       if (num > 0 && num <= 365) {
         dueSoonThreshold = num;
         localStorage.setItem(thresholdKey(), String(num));
+        sb.from('profiles').update({ due_soon_days: num }).eq('user_id', currentUser.id);
         renderAssignments(lastAssignments);
       }
     }
@@ -702,6 +727,7 @@
     function toggleOverdue() {
       showOverdue = !showOverdue;
       localStorage.setItem(showOverdueKey(), String(showOverdue));
+      sb.from('profiles').update({ show_overdue: showOverdue }).eq('user_id', currentUser.id);
       document.getElementById('overdue-toggle').classList.toggle('on', showOverdue);
       renderAssignments(lastAssignments);
     }
