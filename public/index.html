@@ -337,6 +337,7 @@
         const { data, error } = await sb.auth.exchangeCodeForSession(window.location.href);
         if (data?.session) { window.location.href = 'dashboard.html'; return; }
         window.history.replaceState({}, '', window.location.pathname);
+        if (error) showMessage('הקישור פג תוקף או כבר נוצל. נסה להתחבר שוב או שלח קישור אימות חדש.', 'error');
         return;
       }
 
@@ -406,6 +407,11 @@
       setTimeout(() => { btn.disabled = false; btn.textContent = 'שלח שוב'; }, 3000);
     }
 
+    async function resendFromLogin() {
+      const { error } = await sb.auth.resend({ type: 'signup', email: pendingEmail });
+      showMessage(error ? 'שגיאה בשליחה — נסה שוב.' : '✓ קישור אימות נשלח! בדוק את תיבת הדואר.', error ? 'error' : 'success');
+    }
+
     async function handleSubmit() {
       const email    = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
@@ -417,9 +423,20 @@
       if (mode === 'login') {
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) {
-          showMessage(error.message.includes('Email not confirmed')
-            ? 'האימייל שלך לא אומת עדיין. בדוק את תיבת הדואר.'
-            : error.message, 'error');
+          const isUnconfirmed = error.message.includes('Email not confirmed');
+          showMessage(
+            isUnconfirmed
+              ? 'האימייל שלך לא אומת עדיין. בדוק את תיבת הדואר (כולל ספאם).'
+              : error.message,
+            'error'
+          );
+          if (isUnconfirmed) {
+            pendingEmail = email;
+            const resendLink = document.createElement('div');
+            resendLink.style.cssText = 'margin-top:0.5rem;font-size:0.85rem;text-align:center';
+            resendLink.innerHTML = '<a onclick="resendFromLogin()" style="color:var(--accent);cursor:pointer;text-decoration:underline">שלח קישור אימות מחדש</a>';
+            document.getElementById('message-box').appendChild(resendLink);
+          }
           btn.disabled = false; btn.textContent = 'כניסה';
         } else {
           window.location.href = 'dashboard.html';
