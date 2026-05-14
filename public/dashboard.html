@@ -456,6 +456,7 @@
       currentUser = session.user;
       currentSort = localStorage.getItem(sortKey()) || 'date';
       if (currentSort === 'status') { currentSort = 'date'; localStorage.setItem(sortKey(), 'date'); }
+      document.getElementById('sort-select').value = currentSort;
       dueSoonThreshold = parseInt(localStorage.getItem(thresholdKey()) || '3');
       showOverdue = localStorage.getItem(showOverdueKey()) !== 'false';
       const hasUrl = await loadProfile();
