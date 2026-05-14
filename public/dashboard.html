@@ -141,9 +141,11 @@
         <input type="text" id="add-title" placeholder="לדוגמה: תרגיל 3">
       </div>
       <div class="form-group">
-        <label for="add-course">קורס</label>
-        <input type="text" id="add-course" placeholder="לדוגמה: אלגוריתמים" list="course-suggestions">
-        <datalist id="course-suggestions"></datalist>
+        <label for="add-course-select">קורס</label>
+        <select id="add-course-select" style="width:100%;padding:0.625rem 0.875rem;border:1.5px solid var(--border);border-radius:8px;font-size:0.95rem;color:var(--text);background:var(--card-bg);font-family:inherit;outline:none;cursor:pointer" onchange="document.getElementById('add-course-new').style.display=this.value==='__new__'?'block':'none'">
+          <option value="">— ללא קורס —</option>
+        </select>
+        <input type="text" id="add-course-new" placeholder="שם הקורס החדש" style="display:none;margin-top:0.5rem">
       </div>
       <div class="form-group">
         <label for="add-due">תאריך הגשה</label>
@@ -1371,27 +1373,34 @@
 
     function openAddModal() {
       document.getElementById('add-title').value = '';
-      document.getElementById('add-course').value = '';
+      document.getElementById('add-course-new').value = '';
       document.getElementById('add-due').value = '';
       document.getElementById('add-message').style.display = 'none';
 
-      // Populate course suggestions from lastAssignments, deduplicated and sorted
-      const datalist = document.getElementById('course-suggestions');
-      datalist.innerHTML = '';
+      // Populate course select from lastAssignments, deduplicated and sorted
+      const sel = document.getElementById('add-course-select');
+      sel.innerHTML = '<option value="">— ללא קורס —</option>';
+      document.getElementById('add-course-new').style.display = 'none';
       const seenKeys = new Set();
       const courseOptions = [];
       for (const a of (lastAssignments || [])) {
         const key = a.course_name;
         if (!key || seenKeys.has(key)) continue;
         seenKeys.add(key);
-        courseOptions.push(courseNameMap[key] || key);
+        const displayName = (courseNameMap[key] || key).replace(/×/g, '').trim();
+        if (displayName) courseOptions.push({ key, displayName });
       }
-      courseOptions.sort((a, b) => a.localeCompare(b, 'he'));
-      courseOptions.forEach(name => {
+      courseOptions.sort((a, b) => a.displayName.localeCompare(b.displayName, 'he'));
+      courseOptions.forEach(({ key, displayName }) => {
         const opt = document.createElement('option');
-        opt.value = name;
-        datalist.appendChild(opt);
+        opt.value = key;
+        opt.textContent = displayName;
+        sel.appendChild(opt);
       });
+      const newOpt = document.createElement('option');
+      newOpt.value = '__new__';
+      newOpt.textContent = '+ קורס חדש';
+      sel.appendChild(newOpt);
 
       document.getElementById('add-overlay').style.display = 'flex';
       setTimeout(() => document.getElementById('add-title').focus(), 50);
@@ -1403,7 +1412,10 @@
 
     async function submitAdd() {
       const title = document.getElementById('add-title').value.trim();
-      const course = document.getElementById('add-course').value.trim();
+      const selVal = document.getElementById('add-course-select').value;
+      const courseKey = selVal === '__new__'
+        ? (document.getElementById('add-course-new').value.trim() || null)
+        : (selVal || null);
       const due = document.getElementById('add-due').value;
 
       if (!title) {
@@ -1413,9 +1425,6 @@
         el.style.display = 'block';
         return;
       }
-
-      // Resolve display course name back to course key if possible
-      const courseKey = Object.entries(courseNameMap).find(([, name]) => name === course)?.[0] || course || null;
 
       const { error } = await sb.from('assignments').insert({
         user_id: currentUser.id,
