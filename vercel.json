@@ -1,6 +1,9 @@
 {
   "version": 2,
   "outputDirectory": "public",
+  "crons": [
+    { "path": "/api/notify", "schedule": "0 7 * * *" }
+  ],
   "headers": [
     {
       "source": "/sw.js",

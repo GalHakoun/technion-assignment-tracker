@@ -2085,6 +2085,52 @@ body.dark .pinned-card.urgency-done {
 
 .notif-days-select:focus { outline: none; border-color: var(--accent); }
 
+.notif-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.notif-row-info { display: flex; flex-direction: column; gap: 0.2rem; }
+.notif-row-title { font-size: 0.93rem; font-weight: 600; }
+.notif-row-sub { font-size: 0.78rem; color: var(--text-muted); }
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 24px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
 .notif-ios-note {
   font-size: 0.78rem;
   color: var(--text-muted);

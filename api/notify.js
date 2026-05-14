@@ -24,7 +24,7 @@ module.exports = async function handler(req, res) {
 
   const { data: profiles } = await sb
     .from('profiles')
-    .select('user_id, last_notified_at')
+    .select('user_id, last_notified_at, notify_email, notify_days_before')
     .not('moodle_ical_url', 'is', null);
 
   if (!profiles?.length) return res.status(200).json({ success: true, sent: 0 });
@@ -34,20 +34,23 @@ module.exports = async function handler(req, res) {
   for (const u of users) emailMap[u.id] = u.email;
 
   const now = new Date();
-  const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   let sent = 0;
 
   // ── Email notifications ──
   for (const profile of profiles) {
+    if (profile.notify_email === false) continue;
     const email = emailMap[profile.user_id];
     if (!email) continue;
+
+    const daysWindow = profile.notify_days_before || 1;
+    const windowEnd = new Date(now.getTime() + daysWindow * 24 * 60 * 60 * 1000);
 
     const [{ data: upcoming }, { data: newAssignments }] = await Promise.all([
       sb.from('assignments')
         .select('title, course_name, due_date')
         .eq('user_id', profile.user_id)
         .gte('due_date', now.toISOString())
-        .lte('due_date', in7days.toISOString())
+        .lte('due_date', windowEnd.toISOString())
         .order('due_date', { ascending: true }),
       sb.from('assignments')
         .select('id')
@@ -83,7 +86,7 @@ module.exports = async function handler(req, res) {
           <div style="display:flex;gap:12px;margin-bottom:20px">
             <div style="flex:1;background:#f3f2ff;border-radius:10px;padding:14px;text-align:center">
               <div style="font-size:28px;font-weight:700;color:#6c63ff">${upcomingCount}</div>
-              <div style="font-size:13px;color:#6b7280;margin-top:2px">מטלות ב-7 ימים הקרובים</div>
+              <div style="font-size:13px;color:#6b7280;margin-top:2px">מטלות ב-${daysWindow} הימים הקרובים</div>
             </div>
             <div style="flex:1;background:${newCount > 0 ? '#f0fdf4' : '#f9fafb'};border-radius:10px;padding:14px;text-align:center">
               <div style="font-size:28px;font-weight:700;color:${newCount > 0 ? '#10b981' : '#9ca3af'}">${newCount}</div>
@@ -116,7 +119,7 @@ module.exports = async function handler(req, res) {
     await resend.emails.send({
       from: 'Technion Tracker <onboarding@resend.dev>',
       to: email,
-      subject: `בוקר טוב! ${upcomingCount} מטלות ממתינות לך 📚`,
+      subject: `בוקר טוב! ${upcomingCount} מטלות ממתינות לך ב-${daysWindow} הימים הקרובים 📚`,
       html,
     });
 
