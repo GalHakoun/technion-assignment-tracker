@@ -1604,9 +1604,10 @@
       renderTyping();
 
       try {
+        const { data: { session: chatSession } } = await sb.auth.getSession();
         const res = await fetch('/api/chat', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + chatSession?.access_token },
           body: JSON.stringify({ messages: chatMessages })
         });
         const data = await res.json();
@@ -1647,9 +1648,10 @@
       appendBotMessage('מעבד...');
 
       try {
+        const { data: { session: summarySession } } = await sb.auth.getSession();
         const res = await fetch('/api/summarize-ticket', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + summarySession?.access_token },
           body: JSON.stringify({
             messages: chatMessages.filter(m => m.content !== 'מעבד...'),
             userId: currentUser.id,

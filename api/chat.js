@@ -29,6 +29,9 @@ Checker היא אפליקציה שעוקבת אחרי מטלות סטודנטי�
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
+
   const { messages } = req.body;
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'messages array required' });

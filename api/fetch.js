@@ -3,7 +3,8 @@ const ical = require('node-ical');
 const https = require('https');
 const http = require('http');
 
-function fetchIcal(url) {
+function fetchIcal(url, depth = 0) {
+  if (depth > 5) return Promise.reject(new Error('Too many redirects'));
   return new Promise((resolve, reject) => {
     const lib = url.startsWith('https') ? https : http;
     const req = lib.get(url, {
@@ -13,7 +14,7 @@ function fetchIcal(url) {
       }
     }, (res) => {
       if (res.statusCode === 301 || res.statusCode === 302) {
-        return resolve(fetchIcal(res.headers.location));
+        return resolve(fetchIcal(res.headers.location, depth + 1));
       }
       if (res.statusCode !== 200) {
         return reject(new Error(`Request failed with status code ${res.statusCode}`));

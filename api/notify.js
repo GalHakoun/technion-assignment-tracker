@@ -122,34 +122,38 @@ module.exports = async function handler(req, res) {
 
     // Due-soon email
     if (profile.notify_due_email && email && upcomingDue.length > 0) {
-      await resend.emails.send({
-        from: 'Checker <onboarding@resend.dev>',
-        to: email,
-        subject: `${upcomingDue.length} מטלות בקרוב 📚`,
-        html: buildEmailHtml(
-          'בוקר טוב! 🌅',
-          `יש לך ${upcomingDue.length} מטלות שצריך להגיש ב-${daysWindow} הימים הקרובים:`,
-          upcomingDue
-        ),
-      });
-      sent++;
+      try {
+        await resend.emails.send({
+          from: 'Checker <onboarding@resend.dev>',
+          to: email,
+          subject: `${upcomingDue.length} מטלות בקרוב 📚`,
+          html: buildEmailHtml(
+            'בוקר טוב! 🌅',
+            `יש לך ${upcomingDue.length} מטלות שצריך להגיש ב-${daysWindow} הימים הקרובים:`,
+            upcomingDue
+          ),
+        });
+        sent++;
+      } catch (err) { console.error('due email error:', profile.user_id, err.message); }
     }
 
     // Daily summary email
     if (profile.notify_summary_email && email) {
-      await resend.emails.send({
-        from: 'Checker <onboarding@resend.dev>',
-        to: email,
-        subject: `סיכום יומי — ${allUpcoming.length} מטלות ממתינות 📅`,
-        html: buildEmailHtml(
-          'סיכום יומי 📅',
-          allUpcoming.length > 0
-            ? `יש לך ${allUpcoming.length} מטלות ממתינות:`
-            : 'אין מטלות קרובות, כל הכבוד! 🎉',
-          allUpcoming
-        ),
-      });
-      sent++;
+      try {
+        await resend.emails.send({
+          from: 'Checker <onboarding@resend.dev>',
+          to: email,
+          subject: `סיכום יומי — ${allUpcoming.length} מטלות ממתינות 📅`,
+          html: buildEmailHtml(
+            'סיכום יומי 📅',
+            allUpcoming.length > 0
+              ? `יש לך ${allUpcoming.length} מטלות ממתינות:`
+              : 'אין מטלות קרובות, כל הכבוד! 🎉',
+            allUpcoming
+          ),
+        });
+        sent++;
+      } catch (err) { console.error('summary email error:', profile.user_id, err.message); }
     }
 
     if (!sub) continue;
