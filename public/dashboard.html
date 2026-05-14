@@ -304,18 +304,6 @@
     <div class="modal-card notif-card">
       <div class="modal-heading">🔔 התראות</div>
 
-      <div class="notif-days-row">
-        <span>קבל התראה לפני הגשה</span>
-        <select class="notif-days-select" id="notif-days-select" onchange="onNotifDaysChange(this.value)">
-          <option value="0">ביום ההגשה</option>
-          <option value="1">יום לפני</option>
-          <option value="2">יומיים לפני</option>
-          <option value="3">3 ימים לפני</option>
-          <option value="5">5 ימים לפני</option>
-          <option value="7">שבוע לפני</option>
-        </select>
-      </div>
-
       <div class="notif-row" id="notif-push-row">
         <div class="notif-row-info">
           <div class="notif-row-title">🔔 התראת דפדפן</div>
@@ -329,13 +317,25 @@
 
       <div class="notif-row">
         <div class="notif-row-info">
-          <div class="notif-row-title">📧 אימייל</div>
-          <div class="notif-row-sub" id="notif-email-sub">פעיל</div>
+          <div class="notif-row-title">📧 סיכום יומי במייל</div>
+          <div class="notif-row-sub" id="notif-email-sub">כבוי</div>
         </div>
         <label class="toggle-switch">
           <input type="checkbox" id="notif-email-toggle" onchange="onEmailToggle(this.checked)">
           <span class="toggle-slider"></span>
         </label>
+      </div>
+
+      <div class="notif-days-row" id="notif-days-row" style="display:none">
+        <span>קבל התראה לפני הגשה</span>
+        <select class="notif-days-select" id="notif-days-select" onchange="onNotifDaysChange(this.value)">
+          <option value="0">ביום ההגשה</option>
+          <option value="1">יום לפני</option>
+          <option value="2">יומיים לפני</option>
+          <option value="3">3 ימים לפני</option>
+          <option value="5">5 ימים לפני</option>
+          <option value="7">שבוע לפני</option>
+        </select>
       </div>
 
       <div class="notif-ios-note" id="notif-ios-note" style="display:none">
@@ -1657,7 +1657,7 @@
 
     let notifSubscription = null;
     let notifDays = 1;
-    let notifEmailEnabled = true;
+    let notifEmailEnabled = false;
 
     function urlBase64ToUint8Array(b64) {
       const pad = '='.repeat((4 - b64.length % 4) % 4);
@@ -1670,7 +1670,7 @@
         .select('notify_email, notify_days_before')
         .eq('user_id', currentUser.id)
         .single();
-      notifEmailEnabled = data?.notify_email !== false;
+      notifEmailEnabled = data?.notify_email === true;
       notifDays = data?.notify_days_before || 1;
 
       const supported = 'serviceWorker' in navigator && 'PushManager' in window;
@@ -1681,8 +1681,10 @@
     }
 
     function updateBellUI() {
-      const isOn = !!notifSubscription || notifEmailEnabled;
-      document.getElementById('bell-btn')?.classList.toggle('active', isOn);
+      const anyOn = !!notifSubscription || notifEmailEnabled;
+      document.getElementById('bell-btn')?.classList.toggle('active', anyOn);
+      const daysRow = document.getElementById('notif-days-row');
+      if (daysRow) daysRow.style.display = anyOn ? 'flex' : 'none';
     }
 
     function openNotifModal() {
@@ -1701,6 +1703,7 @@
       document.getElementById('notif-email-sub').textContent = notifEmailEnabled ? 'פעיל ✓' : 'כבוי';
 
       document.getElementById('notif-days-select').value = String(notifDays);
+      updateBellUI();
     }
 
     function closeNotifModal() {

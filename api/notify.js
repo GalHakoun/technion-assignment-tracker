@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
 
   // ── Email notifications ──
   for (const profile of profiles) {
-    if (profile.notify_email === false) continue;
+    if (profile.notify_email !== true) continue;
     const email = emailMap[profile.user_id];
     if (!email) continue;
 
