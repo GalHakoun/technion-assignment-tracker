@@ -1057,13 +1057,16 @@
       const displayName = name.charAt(0).toUpperCase() + name.slice(1);
       document.getElementById('hero-greeting').textContent = `שלום, ${displayName}! 👋`;
 
-      const msg = overdueCount > 0
-        ? `${overdueCount} מטלות באיחור — בוא נסגור אותן 💪`
-        : urgentCount > 0
-        ? `${urgentCount} מטלות דחופות ממתינות לך ⚡`
-        : active.length === 0
+      const encouragements = [
+        'הכל תחת שליטה — אנחנו עוקבים בשבילך 💪',
+        'בהצלחה בסמסטר! 🎯',
+        'המטלות שלך מסודרות ומוכנות 📋',
+        'אתה על זה! 🚀',
+        'נשארים מאורגנים, נשארים קדימה ⚡',
+      ];
+      const msg = active.length === 0
         ? 'כל המטלות הושלמו! כל הכבוד 🎉'
-        : `${active.length} מטלות פעילות — בהצלחה! 📚`;
+        : encouragements[Math.floor(Math.random() * encouragements.length)];
       document.getElementById('hero-msg').textContent = msg;
     }
 
