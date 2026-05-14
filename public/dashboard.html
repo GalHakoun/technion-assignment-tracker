@@ -1047,6 +1047,7 @@
         .from('assignments')
         .select('*')
         .eq('user_id', currentUser.id)
+        .neq('deleted', true)
         .order('due_date', { ascending: true });
 
       lastAssignments = error ? [] : (data || []);
@@ -1305,7 +1306,7 @@
 
     async function clearCompleted() {
       await sb.from('assignments')
-        .delete()
+        .update({ deleted: true })
         .eq('user_id', currentUser.id)
         .eq('completed', true);
       await loadAssignments();
@@ -1390,7 +1391,7 @@
 
     async function deleteAssignment(id) {
       if (!confirm('למחוק את המטלה?')) return;
-      await sb.from('assignments').delete().eq('id', id).eq('user_id', currentUser.id);
+      await sb.from('assignments').update({ deleted: true }).eq('id', id).eq('user_id', currentUser.id);
       await loadAssignments();
     }
 
