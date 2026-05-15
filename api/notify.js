@@ -83,14 +83,17 @@ module.exports = async function handler(req, res) {
 
   const { data: pushSubs } = await sb.from('push_subscriptions').select('user_id, endpoint, subscription');
   const pushByUser = {};
-  for (const s of (pushSubs || [])) pushByUser[s.user_id] = s;
+  for (const s of (pushSubs || [])) {
+    if (!pushByUser[s.user_id]) pushByUser[s.user_id] = [];
+    pushByUser[s.user_id].push(s);
+  }
 
   const now = new Date();
   let sent = 0;
 
   for (const profile of profiles) {
     const email = emailMap[profile.user_id];
-    const sub = pushByUser[profile.user_id];
+    const subs = pushByUser[profile.user_id] || [];
     const daysWindow = profile.notify_days_before || 1;
     const windowEnd = new Date(now.getTime() + daysWindow * 24 * 60 * 60 * 1000);
 
@@ -156,28 +159,32 @@ module.exports = async function handler(req, res) {
       } catch (err) { console.error('summary email error:', profile.user_id, err.message); }
     }
 
-    if (!sub) continue;
+    if (!subs.length) continue;
 
-    // Due-soon push
-    if (profile.notify_due_push && upcomingDue.length > 0) {
-      const count = upcomingDue.length;
-      const result = await sendPush(sub, {
-        title: `Checker — ${count} מטלות בקרוב 📚`,
-        body: count === 1
-          ? `"${upcomingDue[0].title}" — בקרוב!`
-          : `${count} מטלות שצריך להגיש ב-${daysWindow} הימים הקרובים`,
-      });
-      if (result === 'expired') await sb.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
-    }
+    for (const sub of subs) {
+      // Due-soon push
+      if (profile.notify_due_push && upcomingDue.length > 0) {
+        const count = upcomingDue.length;
+        const result = await sendPush(sub, {
+          title: `Checker — ${count} מטלות בקרוב 📚`,
+          body: count === 1
+            ? `"${upcomingDue[0].title}" — בקרוב!`
+            : `${count} מטלות שצריך להגיש ב-${daysWindow} הימים הקרובים`,
+        });
+        if (result === 'expired') await sb.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+        else sent++;
+      }
 
-    // Daily summary push
-    if (profile.notify_summary_push) {
-      const count = allUpcoming.length;
-      const result = await sendPush(sub, {
-        title: 'Checker — סיכום יומי 📅',
-        body: count === 0 ? 'אין מטלות קרובות 🎉' : `${count} מטלות ממתינות`,
-      });
-      if (result === 'expired') await sb.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+      // Daily summary push
+      if (profile.notify_summary_push) {
+        const count = allUpcoming.length;
+        const result = await sendPush(sub, {
+          title: 'Checker — סיכום יומי 📅',
+          body: count === 0 ? 'אין מטלות קרובות 🎉' : `${count} מטלות ממתינות`,
+        });
+        if (result === 'expired') await sb.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+        else sent++;
+      }
     }
   }
 

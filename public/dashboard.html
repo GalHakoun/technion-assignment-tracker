@@ -375,7 +375,8 @@
 
       <div id="notif-message" style="display:none;margin-top:0.75rem" class="message"></div>
 
-      <button class="btn-yes" style="width:100%;margin-top:1.25rem" onclick="closeNotifModal()">סגור</button>
+      <button id="notif-test-btn" style="display:none;width:100%;margin-top:0.75rem;background:none;border:1px solid #6c63ff;color:#6c63ff;border-radius:8px;padding:0.5rem;cursor:pointer;font-size:0.85rem" onclick="sendTestNotification()">שלח התראת ניסיון</button>
+      <button class="btn-yes" style="width:100%;margin-top:0.5rem" onclick="closeNotifModal()">סגור</button>
     </div>
   </div>
 
@@ -1749,6 +1750,9 @@
     function updateBellUI() {
       const anyOn = notifDueEmail || notifDuePush || notifSummaryEmail || notifSummaryPush;
       document.getElementById('bell-btn')?.classList.toggle('active', anyOn);
+      const anyPushOn = notifDuePush || notifSummaryPush;
+      const testBtn = document.getElementById('notif-test-btn');
+      if (testBtn) testBtn.style.display = anyPushOn ? 'block' : 'none';
     }
 
     function openNotifModal() {
@@ -1764,6 +1768,9 @@
       document.getElementById('notif-summary-email').checked = notifSummaryEmail;
       document.getElementById('notif-summary-push').checked = notifSummaryPush;
       document.getElementById('notif-days-select').value = String(notifDays);
+
+      const anyPushOn = notifDuePush || notifSummaryPush;
+      document.getElementById('notif-test-btn').style.display = anyPushOn ? 'block' : 'none';
     }
 
     function closeNotifModal() {
@@ -1862,6 +1869,32 @@
           headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
           body: JSON.stringify({ endpoint: notifSubscription.endpoint, notify_days_before: notifDays }),
         });
+      }
+    }
+
+    async function sendTestNotification() {
+      const btn = document.getElementById('notif-test-btn');
+      btn.disabled = true;
+      btn.textContent = 'שולח...';
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        const res = await fetch('/api/notify-test', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + session.access_token },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showNotifMsg('ההתראה נשלחה! בדוק/י את הדפדפן.', 'success');
+        } else if (data.error === 'no_subscription') {
+          showNotifMsg('לא נמצאה מנוי — הפעל/י התראת דפדפן תחילה.', 'error');
+        } else {
+          showNotifMsg('שגיאה בשליחה — ייתכן שהמנוי פג תוקף.', 'error');
+        }
+      } catch (err) {
+        showNotifMsg('שגיאה: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'שלח התראת ניסיון';
       }
     }
 
