@@ -373,6 +373,11 @@
         📱 ב-iPhone, יש להוסיף את Checker למסך הבית כדי לקבל התראות דפדפן.
       </div>
 
+      <div id="notif-browser-note" style="display:none;margin-top:0.75rem;padding:0.6rem 0.75rem;background:#fff8e1;border:1px solid #f0c040;border-radius:8px;font-size:0.83rem;color:#7a5c00;text-align:right">
+        ⚠️ הדפדפן הזה לא מחובר להתראות.
+        <button onclick="subscribeThisBrowser()" style="margin-right:0.4rem;background:#6c63ff;color:white;border:none;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:0.82rem">חבר עכשיו</button>
+      </div>
+
       <div id="notif-message" style="display:none;margin-top:0.75rem" class="message"></div>
 
       <button id="notif-test-btn" style="display:none;width:100%;margin-top:0.75rem;background:none;border:1px solid #6c63ff;color:#6c63ff;border-radius:8px;padding:0.5rem;cursor:pointer;font-size:0.85rem" onclick="sendTestNotification()">שלח התראת ניסיון</button>
@@ -1750,9 +1755,16 @@
     function updateBellUI() {
       const anyOn = notifDueEmail || notifDuePush || notifSummaryEmail || notifSummaryPush;
       document.getElementById('bell-btn')?.classList.toggle('active', anyOn);
+      refreshNotifBrowserUI();
+    }
+
+    function refreshNotifBrowserUI() {
       const anyPushOn = notifDuePush || notifSummaryPush;
+      const subscribed = !!notifSubscription;
+      const browserNote = document.getElementById('notif-browser-note');
       const testBtn = document.getElementById('notif-test-btn');
-      if (testBtn) testBtn.style.display = anyPushOn ? 'block' : 'none';
+      if (browserNote) browserNote.style.display = (anyPushOn && !subscribed) ? 'block' : 'none';
+      if (testBtn) testBtn.style.display = (anyPushOn && subscribed) ? 'block' : 'none';
     }
 
     function openNotifModal() {
@@ -1768,9 +1780,7 @@
       document.getElementById('notif-summary-email').checked = notifSummaryEmail;
       document.getElementById('notif-summary-push').checked = notifSummaryPush;
       document.getElementById('notif-days-select').value = String(notifDays);
-
-      const anyPushOn = notifDuePush || notifSummaryPush;
-      document.getElementById('notif-test-btn').style.display = anyPushOn ? 'block' : 'none';
+      refreshNotifBrowserUI();
     }
 
     function closeNotifModal() {
@@ -1805,6 +1815,14 @@
       } catch (err) {
         showNotifMsg('שגיאה: ' + err.message, 'error');
         return false;
+      }
+    }
+
+    async function subscribeThisBrowser() {
+      const ok = await ensurePushSubscribed();
+      if (ok) {
+        showNotifMsg('הדפדפן חובר בהצלחה! 🎉', 'success');
+        refreshNotifBrowserUI();
       }
     }
 
