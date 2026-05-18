@@ -1376,9 +1376,7 @@
       const pinLabel = a.pinned ? '📌 בטל הצמדה' : '📌 הצמד';
       const urgentLabel = a.urgent ? '⚡ בטל דחיפות' : '⚡ סמן כדחוף';
 
-      return `
-        <div class="assignment-card ${urgency} ${urgentClass} ${completedClass}">
-          <div class="card-main-row">
+      const innerContent = `
             <button class="btn-complete" onclick="toggleComplete('${a.id}', ${a.completed})" title="${a.completed ? 'בטל סימון' : 'סמן כהושלם'}">
               ${a.completed ? '&#9989;' : '&#9711;'}
             </button>
@@ -1398,10 +1396,14 @@
                 <button onclick="toggleUrgent('${a.id}', ${a.urgent});closeCardMenu()">${urgentLabel}</button>
                 <button class="menu-delete" onclick="deleteAssignment('${a.id}')">🗑️ מחק</button>
               </div>
-            </div>
-          </div>
-          ${a.notes ? `<div class="card-notes-section">${escHtml(a.notes)}</div>` : ''}
-        </div>`;
+            </div>`;
+
+      return a.notes
+        ? `<div class="assignment-card ${urgency} ${urgentClass} ${completedClass} has-notes">
+            <div class="card-main-row">${innerContent}</div>
+            <div class="card-notes-section">${escHtml(a.notes)}</div>
+          </div>`
+        : `<div class="assignment-card ${urgency} ${urgentClass} ${completedClass}">${innerContent}</div>`;
     }
 
     function escHtml(str) {

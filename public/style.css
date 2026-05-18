@@ -556,12 +556,20 @@ input:focus {
 
 .assignment-card {
   display: flex;
-  flex-direction: column;
-  padding: 0.75rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
   border: 1px solid var(--border);
   border-inline-start: 5px solid var(--border);
   border-radius: 8px;
   background: var(--bg);
+  gap: 1rem;
+}
+
+.assignment-card.has-notes {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0.75rem 1rem;
   gap: 0;
 }
 
@@ -1539,6 +1547,12 @@ body.dark .pinned-card.urgency-done {
   /* Assignment cards */
   .assignment-card {
     padding: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .assignment-card.has-notes {
+    padding: 0.75rem;
+    gap: 0;
   }
 
   .card-main-row {
