@@ -626,7 +626,6 @@ body.dark .assignment-card.urgent .due-countdown { background: rgba(239,68,68,0.
   text-overflow: ellipsis;
 }
 
-
 .assignment-course {
   font-size: 0.8rem;
   color: var(--text-muted);
