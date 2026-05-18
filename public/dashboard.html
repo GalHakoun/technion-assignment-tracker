@@ -159,6 +159,20 @@
     </div>
   </div>
 
+  <!-- Notes modal -->
+  <div class="modal-overlay" id="notes-overlay" style="display:none" onclick="if(event.target===this)closeNotesModal()">
+    <div class="modal-card">
+      <div class="modal-heading">📝 הערות</div>
+      <div class="form-group" style="margin-top:1.25rem">
+        <textarea id="notes-textarea" rows="6" placeholder="כתוב/י הערות למטלה..." style="width:100%;padding:0.625rem 0.875rem;border:1.5px solid var(--border);border-radius:8px;font-size:0.95rem;color:var(--text);background:var(--card-bg);font-family:inherit;outline:none;resize:vertical;box-sizing:border-box;direction:rtl"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-yes" onclick="saveNotes()">שמור</button>
+        <button class="btn-no" onclick="closeNotesModal()">ביטול</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Uncertain classification popup -->
   <div class="modal-overlay" id="modal-overlay" style="display:none">
     <div class="modal-card">
@@ -1370,6 +1384,7 @@
           <div class="assignment-info">
             ${showCourse && a.course_name ? `<div class="card-course-name">${escHtml(courseNameMap[a.course_name] || a.course_name)}</div>` : ''}
             <div class="assignment-title">${escHtml(a.title)}</div>
+            ${a.notes ? `<div class="card-notes">${escHtml(a.notes)}</div>` : ''}
           </div>
           <div class="assignment-due">
             <div class="due-date">${dueFmt}</div>
@@ -1378,6 +1393,7 @@
           <div class="card-menu-wrap">
             <button class="btn-menu" onclick="toggleCardMenu('${a.id}', event)">&#8942;</button>
             <div class="card-menu" id="card-menu-${a.id}" style="display:none">
+              <button onclick="openNotesModal('${a.id}');closeCardMenu()">📝 הערות</button>
               <button onclick="togglePin('${a.id}', ${a.pinned});closeCardMenu()">${pinLabel}</button>
               <button onclick="toggleUrgent('${a.id}', ${a.urgent});closeCardMenu()">${urgentLabel}</button>
               <button class="menu-delete" onclick="deleteAssignment('${a.id}')">🗑️ מחק</button>
@@ -1399,6 +1415,31 @@
     async function deleteAssignment(id) {
       if (!confirm('למחוק את המטלה?')) return;
       await sb.from('assignments').update({ deleted: true }).eq('id', id).eq('user_id', currentUser.id);
+      await loadAssignments();
+    }
+
+    // ── Notes ──
+
+    let notesAssignmentId = null;
+
+    function openNotesModal(id) {
+      notesAssignmentId = id;
+      const a = (lastAssignments || []).find(x => x.id === id);
+      document.getElementById('notes-textarea').value = a?.notes || '';
+      document.getElementById('notes-overlay').style.display = 'flex';
+      setTimeout(() => document.getElementById('notes-textarea').focus(), 50);
+    }
+
+    function closeNotesModal() {
+      document.getElementById('notes-overlay').style.display = 'none';
+      notesAssignmentId = null;
+    }
+
+    async function saveNotes() {
+      if (!notesAssignmentId) return;
+      const notes = document.getElementById('notes-textarea').value.trim() || null;
+      await sb.from('assignments').update({ notes }).eq('id', notesAssignmentId).eq('user_id', currentUser.id);
+      closeNotesModal();
       await loadAssignments();
     }
 
