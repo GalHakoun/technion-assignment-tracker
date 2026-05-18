@@ -1376,39 +1376,32 @@
       const pinLabel = a.pinned ? '📌 בטל הצמדה' : '📌 הצמד';
       const urgentLabel = a.urgent ? '⚡ בטל דחיפות' : '⚡ סמן כדחוף';
 
-      const cardRow = `
-          <button class="btn-complete" onclick="toggleComplete('${a.id}', ${a.completed})" title="${a.completed ? 'בטל סימון' : 'סמן כהושלם'}">
-            ${a.completed ? '&#9989;' : '&#9711;'}
-          </button>
-          <div class="assignment-info">
-            ${showCourse && a.course_name ? `<div class="card-course-name">${escHtml(courseNameMap[a.course_name] || a.course_name)}</div>` : ''}
-            <div class="assignment-title">${escHtml(a.title)}</div>
-            ${a.notes ? `<button class="notes-toggle" onclick="toggleNotesExpand('${a.id}', event)">הערות +</button>` : ''}
-          </div>
-          <div class="assignment-due">
-            <div class="due-date">${dueFmt}</div>
-            ${countdown ? `<div class="due-countdown ${urgency}">${countdown}</div>` : ''}
-          </div>
-          <div class="card-menu-wrap">
-            <button class="btn-menu" onclick="toggleCardMenu('${a.id}', event)">&#8942;</button>
-            <div class="card-menu" id="card-menu-${a.id}" style="display:none">
-              <button onclick="openNotesModal('${a.id}');closeCardMenu()">📝 הערות</button>
-              <button onclick="togglePin('${a.id}', ${a.pinned});closeCardMenu()">${pinLabel}</button>
-              <button onclick="toggleUrgent('${a.id}', ${a.urgent});closeCardMenu()">${urgentLabel}</button>
-              <button class="menu-delete" onclick="deleteAssignment('${a.id}')">🗑️ מחק</button>
-            </div>
-          </div>`;
-
-      if (a.notes) {
-        return `
-          <div class="assignment-card ${urgency} ${urgentClass} ${completedClass} card-with-notes" id="acard-${a.id}">
-            <div class="card-row">${cardRow}</div>
-            <div class="card-notes-section" id="notes-${a.id}" style="display:none">${escHtml(a.notes)}</div>
-          </div>`;
-      }
       return `
         <div class="assignment-card ${urgency} ${urgentClass} ${completedClass}" id="acard-${a.id}">
-          ${cardRow}
+          <div class="card-row">
+            <button class="btn-complete" onclick="toggleComplete('${a.id}', ${a.completed})" title="${a.completed ? 'בטל סימון' : 'סמן כהושלם'}">
+              ${a.completed ? '&#9989;' : '&#9711;'}
+            </button>
+            <div class="assignment-info">
+              ${showCourse && a.course_name ? `<div class="card-course-name">${escHtml(courseNameMap[a.course_name] || a.course_name)}</div>` : ''}
+              <div class="assignment-title">${escHtml(a.title)}</div>
+              ${a.notes ? `<button class="notes-toggle" onclick="toggleNotesExpand('${a.id}', event)">הערות +</button>` : ''}
+            </div>
+            <div class="assignment-due">
+              <div class="due-date">${dueFmt}</div>
+              ${countdown ? `<div class="due-countdown ${urgency}">${countdown}</div>` : ''}
+            </div>
+            <div class="card-menu-wrap">
+              <button class="btn-menu" onclick="toggleCardMenu('${a.id}', event)">&#8942;</button>
+              <div class="card-menu" id="card-menu-${a.id}" style="display:none">
+                <button onclick="openNotesModal('${a.id}');closeCardMenu()">📝 הערות</button>
+                <button onclick="togglePin('${a.id}', ${a.pinned});closeCardMenu()">${pinLabel}</button>
+                <button onclick="toggleUrgent('${a.id}', ${a.urgent});closeCardMenu()">${urgentLabel}</button>
+                <button class="menu-delete" onclick="deleteAssignment('${a.id}')">🗑️ מחק</button>
+              </div>
+            </div>
+          </div>
+          ${a.notes ? `<div class="card-notes-section" id="notes-${a.id}" style="display:none">${escHtml(a.notes)}</div>` : ''}
         </div>`;
     }
 
