@@ -1377,13 +1377,14 @@
       const urgentLabel = a.urgent ? '⚡ בטל דחיפות' : '⚡ סמן כדחוף';
 
       return `
-        <div class="assignment-card ${urgency} ${urgentClass} ${completedClass}">
+        <div class="assignment-card ${urgency} ${urgentClass} ${completedClass}" id="acard-${a.id}">
           <button class="btn-complete" onclick="toggleComplete('${a.id}', ${a.completed})" title="${a.completed ? 'בטל סימון' : 'סמן כהושלם'}">
             ${a.completed ? '&#9989;' : '&#9711;'}
           </button>
           <div class="assignment-info">
             ${showCourse && a.course_name ? `<div class="card-course-name">${escHtml(courseNameMap[a.course_name] || a.course_name)}</div>` : ''}
             <div class="assignment-title">${escHtml(a.title)}</div>
+            ${a.notes ? `<button class="notes-toggle" onclick="toggleNotesExpand('${a.id}', event)">הערות +</button>` : ''}
           </div>
           <div class="assignment-due">
             <div class="due-date">${dueFmt}</div>
@@ -1398,6 +1399,7 @@
               <button class="menu-delete" onclick="deleteAssignment('${a.id}')">🗑️ מחק</button>
             </div>
           </div>
+          ${a.notes ? `<div class="card-notes-section">${escHtml(a.notes)}</div>` : ''}
         </div>`;
     }
 
@@ -1415,6 +1417,14 @@
       if (!confirm('למחוק את המטלה?')) return;
       await sb.from('assignments').update({ deleted: true }).eq('id', id).eq('user_id', currentUser.id);
       await loadAssignments();
+    }
+
+    function toggleNotesExpand(id, event) {
+      event.stopPropagation();
+      const card = document.getElementById('acard-' + id);
+      const btn = card.querySelector('.notes-toggle');
+      const open = card.classList.toggle('notes-open');
+      btn.textContent = open ? 'הערות −' : 'הערות +';
     }
 
     // ── Notes ──

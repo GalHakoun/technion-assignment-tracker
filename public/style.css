@@ -558,12 +558,43 @@ input:focus {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   padding: 0.875rem 1rem;
   border: 1px solid var(--border);
   border-inline-start: 5px solid var(--border);
   border-radius: 8px;
   background: var(--bg);
   gap: 1rem;
+}
+
+.notes-toggle {
+  display: inline-block;
+  margin-top: 3px;
+  font-size: 0.7rem;
+  color: var(--primary);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1;
+}
+
+.card-notes-section {
+  display: none;
+  width: 100%;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+  margin-top: -0.25rem;
+}
+
+.assignment-card.notes-open .card-notes-section {
+  display: block;
 }
 
 .assignment-card.overdue {
