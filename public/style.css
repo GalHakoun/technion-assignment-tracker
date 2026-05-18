@@ -556,14 +556,21 @@ input:focus {
 
 .assignment-card {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.875rem 1rem;
+  flex-direction: column;
+  padding: 0.75rem 1rem;
   border: 1px solid var(--border);
   border-inline-start: 5px solid var(--border);
   border-radius: 8px;
   background: var(--bg);
+  gap: 0;
+}
+
+.card-main-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
+  width: 100%;
 }
 
 .assignment-card.overdue {
@@ -626,13 +633,15 @@ body.dark .assignment-card.urgent .due-countdown { background: rgba(239,68,68,0.
   text-overflow: ellipsis;
 }
 
-.card-notes {
-  font-size: 0.78rem;
+.card-notes-section {
+  font-size: 0.72rem;
   color: var(--text-muted);
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin-top: 0.5rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--border);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.45;
 }
 
 .assignment-course {
@@ -1530,6 +1539,9 @@ body.dark .pinned-card.urgency-done {
   /* Assignment cards */
   .assignment-card {
     padding: 0.75rem;
+  }
+
+  .card-main-row {
     gap: 0.5rem;
   }
 
