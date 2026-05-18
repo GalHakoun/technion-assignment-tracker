@@ -566,21 +566,6 @@ input:focus {
   gap: 1rem;
 }
 
-.assignment-card.has-notes {
-  flex-direction: column;
-  align-items: stretch;
-  padding: 0.75rem 1rem;
-  gap: 0;
-}
-
-.card-main-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  width: 100%;
-}
-
 .assignment-card.overdue {
   border-inline-start-color: var(--error);
   background: #fef2f2;
@@ -641,16 +626,6 @@ body.dark .assignment-card.urgent .due-countdown { background: rgba(239,68,68,0.
   text-overflow: ellipsis;
 }
 
-.card-notes-section {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin-top: 0.5rem;
-  padding-top: 0.4rem;
-  border-top: 1px solid var(--border);
-  white-space: pre-wrap;
-  word-break: break-word;
-  line-height: 1.45;
-}
 
 .assignment-course {
   font-size: 0.8rem;
@@ -1547,15 +1522,6 @@ body.dark .pinned-card.urgency-done {
   /* Assignment cards */
   .assignment-card {
     padding: 0.75rem;
-    gap: 0.5rem;
-  }
-
-  .assignment-card.has-notes {
-    padding: 0.75rem;
-    gap: 0;
-  }
-
-  .card-main-row {
     gap: 0.5rem;
   }
 
