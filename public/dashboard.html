@@ -1376,8 +1376,7 @@
       const pinLabel = a.pinned ? '📌 בטל הצמדה' : '📌 הצמד';
       const urgentLabel = a.urgent ? '⚡ בטל דחיפות' : '⚡ סמן כדחוף';
 
-      return `
-        <div class="assignment-card ${urgency} ${urgentClass} ${completedClass}" id="acard-${a.id}">
+      const cardRow = `
           <button class="btn-complete" onclick="toggleComplete('${a.id}', ${a.completed})" title="${a.completed ? 'בטל סימון' : 'סמן כהושלם'}">
             ${a.completed ? '&#9989;' : '&#9711;'}
           </button>
@@ -1398,8 +1397,18 @@
               <button onclick="toggleUrgent('${a.id}', ${a.urgent});closeCardMenu()">${urgentLabel}</button>
               <button class="menu-delete" onclick="deleteAssignment('${a.id}')">🗑️ מחק</button>
             </div>
-          </div>
-          ${a.notes ? `<div class="card-notes-section">${escHtml(a.notes)}</div>` : ''}
+          </div>`;
+
+      if (a.notes) {
+        return `
+          <div class="assignment-card ${urgency} ${urgentClass} ${completedClass} card-with-notes" id="acard-${a.id}">
+            <div class="card-row">${cardRow}</div>
+            <div class="card-notes-section" id="notes-${a.id}" style="display:none">${escHtml(a.notes)}</div>
+          </div>`;
+      }
+      return `
+        <div class="assignment-card ${urgency} ${urgentClass} ${completedClass}" id="acard-${a.id}">
+          ${cardRow}
         </div>`;
     }
 
@@ -1421,10 +1430,11 @@
 
     function toggleNotesExpand(id, event) {
       event.stopPropagation();
-      const card = document.getElementById('acard-' + id);
-      const btn = card.querySelector('.notes-toggle');
-      const open = card.classList.toggle('notes-open');
-      btn.textContent = open ? 'הערות −' : 'הערות +';
+      const notesEl = document.getElementById('notes-' + id);
+      const btn = event.currentTarget;
+      const isOpen = notesEl.style.display === 'block';
+      notesEl.style.display = isOpen ? 'none' : 'block';
+      btn.textContent = isOpen ? 'הערות +' : 'הערות −';
     }
 
     // ── Notes ──
