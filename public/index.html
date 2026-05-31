@@ -343,6 +343,8 @@
 
       const { data: { session } } = await sb.auth.getSession();
       if (session) window.location.href = 'dashboard.html';
+
+      if (params.get('signup')) switchMode();
     }
     init();
 
