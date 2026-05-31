@@ -95,17 +95,6 @@
     /* ─── HERO ─── */
     .hero { padding: 9rem 1.5rem 5rem; text-align: center; }
 
-    .hero-badge {
-      display: inline-block;
-      padding: 5px 16px;
-      background: rgba(83,74,183,.1);
-      border: 1px solid rgba(83,74,183,.2);
-      border-radius: 20px;
-      font-size: 12px; font-weight: 600; color: var(--purple);
-      margin-bottom: 1.5rem;
-      animation: fadeUp .6s ease both .1s;
-    }
-
     .hero h1 {
       font-size: clamp(2rem, 5vw, 3rem);
       font-weight: 800; color: var(--dark);
@@ -157,18 +146,18 @@
       pointer-events: none;
     }
     .mockup-frame {
-      background: #f8f9fa;
+      background: #111827;
       border-radius: 18px;
-      border: 1px solid #d5d0eb;
-      box-shadow: 0 20px 70px rgba(83,74,183,.18), 0 2px 8px rgba(0,0,0,.06);
+      border: 1px solid #374151;
+      box-shadow: 0 20px 70px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.2);
       overflow: hidden;
       position: relative;
     }
 
     /* title bar (mac dots) */
     .mockup-titlebar {
-      background: #ececec;
-      border-bottom: 1px solid #ddd;
+      background: #1a1f2e;
+      border-bottom: 1px solid #374151;
       padding: 9px 14px;
       display: flex; align-items: center; gap: 6px;
     }
@@ -176,88 +165,86 @@
 
     /* app navbar */
     .app-nav {
-      background: #ffffff;
-      border-bottom: 1px solid #e5e7eb;
+      background: #1f2937;
+      border-bottom: 1px solid #374151;
       padding: 0 1.25rem;
       height: 52px;
       display: flex; align-items: center; justify-content: space-between;
     }
     .app-nav-brand {
       display: flex; align-items: center; gap: 0.5rem;
-      font-size: 1rem; font-weight: 700; color: #1a1a2e;
+      font-size: 1rem; font-weight: 700; color: #f3f4f6;
     }
-    .app-nav-logo {
-      width: 28px; height: 28px;
-    }
+    .app-nav-logo { width: 28px; height: 28px; }
     .app-nav-left { display: flex; gap: 8px; align-items: center; }
     .app-btn-sm {
-      font-size: 11px; font-weight: 600; color: #6b7280;
-      background: none; border: 1px solid #e5e7eb; border-radius: 6px;
+      font-size: 11px; font-weight: 500; color: #9ca3af;
+      background: none; border: 1px solid #374151; border-radius: 6px;
       padding: 4px 10px; cursor: default; font-family: inherit;
     }
 
     /* hero banner */
     .app-banner {
-      background: #edeaff;
-      border-bottom: 1px solid #ddd8ff;
+      background: #1e1650;
+      border-bottom: 1px solid #2d2080;
       padding: 0.9rem 1.25rem;
       display: flex; align-items: center; justify-content: space-between; gap: 1rem;
     }
     .app-banner-text { text-align: right; }
-    .app-banner-greeting { font-size: 0.85rem; font-weight: 700; color: #1a1a2e; margin-bottom: 2px; }
-    .app-banner-sub     { font-size: 0.72rem; color: #6b7280; }
+    .app-banner-greeting { font-size: 0.85rem; font-weight: 700; color: #e8e4ff; margin-bottom: 2px; }
+    .app-banner-sub     { font-size: 0.72rem; color: #9ca3af; }
     .app-stats { display: flex; gap: 0.5rem; }
     .app-stat {
-      background: white; border: 1px solid #e0dbff; border-radius: 10px;
+      background: #2a1f6e; border: 1px solid #3b2fa0; border-radius: 10px;
       padding: 0.45rem 0.8rem; text-align: center; min-width: 56px;
     }
-    .app-stat-num   { font-size: 1.2rem; font-weight: 700; color: #1a1a2e; line-height: 1; }
-    .app-stat-label { font-size: 0.62rem; color: #6b7280; margin-top: 2px; }
+    .app-stat-num   { font-size: 1.2rem; font-weight: 700; color: #e8e4ff; line-height: 1; }
+    .app-stat-label { font-size: 0.62rem; color: #9ca3af; margin-top: 2px; }
 
     /* assignment list */
     .app-content { padding: 0.875rem 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; }
     .app-section-label {
-      font-size: 0.68rem; font-weight: 700; color: #9ca3af;
+      font-size: 0.68rem; font-weight: 700; color: #6b7280;
       letter-spacing: .3px; padding: 2px 2px 4px;
     }
 
     .app-card {
       display: flex; align-items: center;
       padding: 0.75rem 0.875rem;
-      border: 1px solid #e5e7eb;
-      border-inline-start: 4px solid #e5e7eb;
+      border: 1px solid #374151;
+      border-inline-start: 4px solid #374151;
       border-radius: 8px;
-      background: white;
+      background: #1f2937;
       gap: 0.75rem;
       transition: opacity .35s;
       cursor: pointer;
       user-select: none;
     }
-    .app-card:hover { filter: brightness(0.98); }
+    .app-card:hover { filter: brightness(1.06); }
     .app-card.urgent { border-inline-start-color: #ef4444; }
     .app-card.soon   { border-inline-start-color: #f59e0b; }
     .app-card.ok     { border-inline-start-color: #10b981; }
-    .app-card.done   { opacity: .42; }
-    .app-card.done .app-card-title { text-decoration: line-through; color: #9ca3af; }
+    .app-card.done   { opacity: .38; }
+    .app-card.done .app-card-title { text-decoration: line-through; color: #6b7280; }
 
     .app-card-info { flex: 1; min-width: 0; }
-    .app-card-course { font-size: 0.62rem; font-weight: 700; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .app-card-title  { font-size: 0.8rem; font-weight: 500; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+    .app-card-course { font-size: 0.62rem; font-weight: 700; color: #7c6ff7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .app-card-title  { font-size: 0.8rem; font-weight: 500; color: #f3f4f6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 
     .app-card-due { text-align: end; flex-shrink: 0; }
-    .app-card-date { font-size: 0.68rem; color: #6b7280; }
+    .app-card-date { font-size: 0.68rem; color: #9ca3af; }
     .app-pill {
       display: inline-block; font-size: 0.62rem; font-weight: 600;
       padding: 0.1rem 0.45rem; border-radius: 20px; margin-top: 3px;
     }
-    .app-pill.red    { color: #b91c1c; background: #fee2e2; }
-    .app-pill.yellow { color: #92400e; background: #fef3c7; }
-    .app-pill.green  { color: #065f46; background: #d1fae5; }
-    .app-pill.done   { color: #6b7280; background: #f3f4f6; }
+    .app-pill.red    { color: #fca5a5; background: rgba(239,68,68,.18); }
+    .app-pill.yellow { color: #fcd34d; background: rgba(245,158,11,.18); }
+    .app-pill.green  { color: #6ee7b7; background: rgba(16,185,129,.18); }
+    .app-pill.done   { color: #6b7280; background: rgba(107,114,128,.15); }
 
     .app-check-btn {
       width: 22px; height: 22px; flex-shrink: 0;
-      border-radius: 50%; border: 1.5px solid #d1d5db;
+      border-radius: 50%; border: 1.5px solid #4b5563;
       background: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: border-color .2s, background .2s;
@@ -404,7 +391,6 @@
   <!-- ─── HERO ─── -->
   <section class="hero">
     <div class="wrap">
-      <div class="hero-badge">לסטודנטים בטכניון</div>
       <h1>כל ההגשות שלך<br><span>במקום אחד</span></h1>
       <p class="hero-sub">
         Checker מתחבר ישירות למודל, מזהה את כל המטלות אוטומטית, ומסדר אותן לפי תאריך —
@@ -602,14 +588,15 @@
   </footer>
 
   <script>
-    /* scroll fade-in */
+    /* scroll fade-in — repeats every time element enters/leaves viewport */
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
+        const el = entry.target;
         if (entry.isIntersecting) {
-          const el = entry.target;
           const delay = el.dataset.delay ? parseFloat(el.dataset.delay) * 120 : 0;
           setTimeout(() => el.classList.add('visible'), delay);
-          observer.unobserve(el);
+        } else {
+          el.classList.remove('visible');
         }
       });
     }, { threshold: 0.12 });
