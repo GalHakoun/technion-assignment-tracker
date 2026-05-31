@@ -146,18 +146,18 @@
       pointer-events: none;
     }
     .mockup-frame {
-      background: #111827;
+      background: #f8f9fa;
       border-radius: 18px;
-      border: 1px solid #374151;
-      box-shadow: 0 20px 70px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.2);
+      border: 1px solid #d5d0eb;
+      box-shadow: 0 20px 70px rgba(83,74,183,.16), 0 2px 8px rgba(0,0,0,.05);
       overflow: hidden;
       position: relative;
     }
 
     /* title bar (mac dots) */
     .mockup-titlebar {
-      background: #1a1f2e;
-      border-bottom: 1px solid #374151;
+      background: #ececec;
+      border-bottom: 1px solid #ddd;
       padding: 9px 14px;
       display: flex; align-items: center; gap: 6px;
     }
@@ -165,94 +165,98 @@
 
     /* app navbar */
     .app-nav {
-      background: #1f2937;
-      border-bottom: 1px solid #374151;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
       padding: 0 1.25rem;
       height: 52px;
       display: flex; align-items: center; justify-content: space-between;
     }
     .app-nav-brand {
       display: flex; align-items: center; gap: 0.5rem;
-      font-size: 1rem; font-weight: 700; color: #f3f4f6;
+      font-size: 1rem; font-weight: 700; color: #1a1a2e;
     }
     .app-nav-logo { width: 28px; height: 28px; }
     .app-nav-left { display: flex; gap: 8px; align-items: center; }
     .app-btn-sm {
-      font-size: 11px; font-weight: 500; color: #9ca3af;
-      background: none; border: 1px solid #374151; border-radius: 6px;
+      font-size: 11px; font-weight: 500; color: #6b7280;
+      background: none; border: 1px solid #e5e7eb; border-radius: 6px;
       padding: 4px 10px; cursor: default; font-family: inherit;
     }
 
     /* hero banner */
     .app-banner {
-      background: #1e1650;
-      border-bottom: 1px solid #2d2080;
+      background: #edeaff;
+      border-bottom: 1px solid #ddd8ff;
       padding: 0.9rem 1.25rem;
       display: flex; align-items: center; justify-content: space-between; gap: 1rem;
     }
     .app-banner-text { text-align: right; }
-    .app-banner-greeting { font-size: 0.85rem; font-weight: 700; color: #e8e4ff; margin-bottom: 2px; }
-    .app-banner-sub     { font-size: 0.72rem; color: #9ca3af; }
+    .app-banner-greeting { font-size: 0.85rem; font-weight: 700; color: #1a1a2e; margin-bottom: 2px; }
+    .app-banner-sub     { font-size: 0.72rem; color: #6b7280; }
     .app-stats { display: flex; gap: 0.5rem; }
     .app-stat {
-      background: #2a1f6e; border: 1px solid #3b2fa0; border-radius: 10px;
+      background: #ffffff; border: 1px solid #e0dbff; border-radius: 10px;
       padding: 0.45rem 0.8rem; text-align: center; min-width: 56px;
     }
-    .app-stat-num   { font-size: 1.2rem; font-weight: 700; color: #e8e4ff; line-height: 1; }
-    .app-stat-label { font-size: 0.62rem; color: #9ca3af; margin-top: 2px; }
+    .app-stat-num   { font-size: 1.2rem; font-weight: 700; color: #1a1a2e; line-height: 1; }
+    .app-stat-label { font-size: 0.62rem; color: #6b7280; margin-top: 2px; }
 
     /* assignment list */
     .app-content { padding: 0.875rem 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; }
     .app-section-label {
-      font-size: 0.68rem; font-weight: 700; color: #6b7280;
+      font-size: 0.68rem; font-weight: 700; color: #9ca3af;
       letter-spacing: .3px; padding: 2px 2px 4px;
     }
 
     .app-card {
       display: flex; align-items: center;
       padding: 0.75rem 0.875rem;
-      border: 1px solid #374151;
-      border-inline-start: 4px solid #374151;
+      border: 1px solid #e5e7eb;
+      border-inline-start: 5px solid #e5e7eb;
       border-radius: 8px;
-      background: #1f2937;
+      background: #f8f9fa;
       gap: 0.75rem;
       transition: opacity .35s;
       cursor: pointer;
       user-select: none;
     }
-    .app-card:hover { filter: brightness(1.06); }
+    .app-card:hover { filter: brightness(0.97); }
     .app-card.urgent { border-inline-start-color: #ef4444; }
     .app-card.soon   { border-inline-start-color: #f59e0b; }
     .app-card.ok     { border-inline-start-color: #10b981; }
-    .app-card.done   { opacity: .38; }
-    .app-card.done .app-card-title { text-decoration: line-through; color: #6b7280; }
-
-    .app-card-info { flex: 1; min-width: 0; }
-    .app-card-course { font-size: 0.62rem; font-weight: 700; color: #7c6ff7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .app-card-title  { font-size: 0.8rem; font-weight: 500; color: #f3f4f6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-
-    .app-card-due { text-align: end; flex-shrink: 0; }
-    .app-card-date { font-size: 0.68rem; color: #9ca3af; }
-    .app-pill {
-      display: inline-block; font-size: 0.62rem; font-weight: 600;
-      padding: 0.1rem 0.45rem; border-radius: 20px; margin-top: 3px;
-    }
-    .app-pill.red    { color: #fca5a5; background: rgba(239,68,68,.18); }
-    .app-pill.yellow { color: #fcd34d; background: rgba(245,158,11,.18); }
-    .app-pill.green  { color: #6ee7b7; background: rgba(16,185,129,.18); }
-    .app-pill.done   { color: #6b7280; background: rgba(107,114,128,.15); }
+    .app-card.done   { opacity: .45; }
+    .app-card.done .app-card-title { text-decoration: line-through; color: #9ca3af; }
 
     .app-check-btn {
       width: 22px; height: 22px; flex-shrink: 0;
-      border-radius: 50%; border: 1.5px solid #4b5563;
+      border-radius: 50%; border: 1.5px solid #d1d5db;
       background: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: border-color .2s, background .2s;
       font-size: 11px; color: transparent;
     }
     .app-check-btn:hover { border-color: #7c6ff7; }
-    .app-card.done .app-check-btn {
-      background: #7c6ff7; border-color: #7c6ff7; color: white;
+    .app-card.done .app-check-btn { background: #7c6ff7; border-color: #7c6ff7; color: white; }
+
+    .app-card-info { flex: 1; min-width: 0; }
+    .app-card-course { font-size: 0.65rem; font-weight: 700; color: #7c6ff7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .app-card-title  { font-size: 0.82rem; font-weight: 500; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+
+    .app-card-due { text-align: end; flex-shrink: 0; }
+    .app-card-date { font-size: 0.7rem; color: #6b7280; }
+    .app-pill {
+      display: inline-block; font-size: 0.65rem; font-weight: 600;
+      padding: 0.15rem 0.5rem; border-radius: 20px; margin-top: 3px;
+    }
+    .app-pill.red    { color: #b91c1c; background: #fee2e2; }
+    .app-pill.yellow { color: #92400e; background: #fef3c7; }
+    .app-pill.green  { color: #065f46; background: #d1fae5; }
+    .app-pill.done   { color: #6b7280; background: #f3f4f6; }
+
+    .app-menu-btn {
+      font-size: 13px; color: #9ca3af;
+      background: none; border: none; cursor: default;
+      flex-shrink: 0; padding: 0 2px; line-height: 1;
     }
 
     /* ─── PAIN ─── */
@@ -454,6 +458,7 @@
             <div class="app-section-label">קרוב — השבוע</div>
 
             <div class="app-card urgent" onclick="toggleDone(this)">
+              <button class="app-check-btn" tabindex="-1">✓</button>
               <div class="app-card-info">
                 <div class="app-card-course">234218 • מבנה נתונים</div>
                 <div class="app-card-title">תרגיל 4</div>
@@ -462,10 +467,11 @@
                 <div class="app-card-date">מחר, 23:59</div>
                 <div class="app-pill red">מחר</div>
               </div>
-              <button class="app-check-btn" tabindex="-1">✓</button>
+              <button class="app-menu-btn" tabindex="-1">⋮</button>
             </div>
 
             <div class="app-card soon" onclick="toggleDone(this)">
+              <button class="app-check-btn" tabindex="-1">✓</button>
               <div class="app-card-info">
                 <div class="app-card-course">104016 • אלגברה לינארית</div>
                 <div class="app-card-title">HW3 — Linear Algebra</div>
@@ -474,10 +480,11 @@
                 <div class="app-card-date">יום ד׳, 23:59</div>
                 <div class="app-pill yellow">2 ימים</div>
               </div>
-              <button class="app-check-btn" tabindex="-1">✓</button>
+              <button class="app-menu-btn" tabindex="-1">⋮</button>
             </div>
 
             <div class="app-card ok" onclick="toggleDone(this)">
+              <button class="app-check-btn" tabindex="-1">✓</button>
               <div class="app-card-info">
                 <div class="app-card-course">114052 • פיזיקה 2</div>
                 <div class="app-card-title">הגשה 2</div>
@@ -486,12 +493,13 @@
                 <div class="app-card-date">יום ה׳, 23:59</div>
                 <div class="app-pill green">3 ימים</div>
               </div>
-              <button class="app-check-btn" tabindex="-1">✓</button>
+              <button class="app-menu-btn" tabindex="-1">⋮</button>
             </div>
 
             <div class="app-section-label" style="margin-top:4px">הושלמו</div>
 
             <div class="app-card done">
+              <button class="app-check-btn" tabindex="-1">✓</button>
               <div class="app-card-info">
                 <div class="app-card-course">104004 • חשבון אינפיניטסימלי</div>
                 <div class="app-card-title">תרגיל 3</div>
@@ -500,7 +508,7 @@
                 <div class="app-card-date">הוגש</div>
                 <div class="app-pill done">✓ הושלם</div>
               </div>
-              <button class="app-check-btn" tabindex="-1">✓</button>
+              <button class="app-menu-btn" tabindex="-1">⋮</button>
             </div>
           </div>
 
