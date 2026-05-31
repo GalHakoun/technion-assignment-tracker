@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checker</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#7c6ff7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Checker">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+  <script>if(localStorage.getItem('dark_mode')==='true')document.documentElement.setAttribute('data-dark','1')</script>
+  <style>html{background:#f4f3fb}html[data-dark='1']{background:#111827}</style>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f4f3fb;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse-ring {
+      0%   { transform: scale(1);   opacity: 0.5; }
+      70%  { transform: scale(1.5); opacity: 0;   }
+      100% { transform: scale(1.5); opacity: 0;   }
+    }
+    @keyframes checkDraw {
+      from { stroke-dashoffset: 40; }
+      to   { stroke-dashoffset: 0;  }
+    }
+
+    .f1 { animation: fadeUp .7s ease both .1s;  }
+    .f2 { animation: fadeUp .7s ease both .3s;  }
+    .f3 { animation: fadeUp .7s ease both .5s;  }
+    .f4 { animation: fadeUp .7s ease both .65s; }
+
+    .notebook-bg {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 95%;
+      max-width: 680px;
+      height: 65vh;
+      pointer-events: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+      padding-bottom: 160px;
+    }
+
+    .logo-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .icon-ring-container { position: relative; width: 64px; height: 64px; }
+
+    .pulse-ring {
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      border: 1.5px solid #9b94cc;
+      animation: pulse-ring 2.5s ease-out infinite;
+    }
+    .pulse-ring-2 {
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      border: 1.5px solid #c8c2f0;
+      animation: pulse-ring 2.5s ease-out infinite .7s;
+    }
+
+    .icon-circle {
+      position: absolute; inset: 0;
+      background: #111;
+      border-radius: 50%;
+      border: 2px solid #9b94cc;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .icon-circle svg polyline {
+      stroke-dasharray: 40;
+      animation: checkDraw .8s ease both .3s;
+    }
+
+    .logo-title h1 {
+      font-size: 22px; font-weight: 600;
+      color: #26215C; letter-spacing: -.3px; text-align: center;
+    }
+    .logo-title p {
+      margin-top: 5px; font-size: 12px;
+      font-weight: 600; color: #9b94cc; text-align: center;
+    }
+
+    .card {
+      width: 100%;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(12px);
+      border: 1px solid #e8e4f8;
+      border-radius: 14px;
+      padding: 22px 20px;
+      display: flex; flex-direction: column; gap: 14px;
+      box-shadow: 0 2px 20px rgba(83,74,183,.07);
+    }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 11px; font-weight: 600; color: #9b94cc; letter-spacing: .3px; }
+    .field input {
+      background: #f7f6ff; border: 1px solid #ddd8f5;
+      border-radius: 10px; padding: 12px 14px;
+      color: #26215C; font-size: 14px; outline: none;
+      transition: border-color .25s; font-family: inherit; width: 100%;
+      direction: ltr;
+    }
+    .field input:focus { border-color: #9b94cc; }
+    .field input::placeholder { color: #b0a8d8; }
+
+    .forgot a { font-size: 11px; font-weight: 600; color: #9b94cc; text-decoration: none; }
+
+    .message-box {
+      padding: 10px 14px; border-radius: 8px;
+      font-size: 13px; display: none;
+    }
+    .message-box.error   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .message-box.success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+    .btn-login {
+      width: 100%; padding: 11px; background: #534AB7;
+      border: none; border-radius: 9px; color: white;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: background .25s, transform .1s; font-family: inherit;
+    }
+    .btn-login:hover    { background: #7F77DD; }
+    .btn-login:active   { transform: scale(.97); }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .auth-divider {
+      display: flex; align-items: center; gap: 10px;
+      color: #9b94cc; font-size: 11px; font-weight: 600;
+    }
+    .auth-divider::before,
+    .auth-divider::after { content: ''; flex: 1; height: 1px; background: #e0dcf5; }
+
+    .btn-google {
+      display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+      width: 100%; padding: 11px;
+      background: #fff; border: 1px solid #ddd8f5; border-radius: 9px;
+      font-size: 13px; font-weight: 600; color: #26215C;
+      cursor: pointer; font-family: inherit;
+      transition: background .2s, border-color .2s;
+    }
+    .btn-google:hover { background: #f7f6ff; border-color: #b0a8d8; }
+
+    .bottom-text { margin-top: 14px; font-size: 12px; font-weight: 600; color: #534AB7; text-align: center; }
+    .bottom-text a { color: #534AB7; font-weight: 700; text-decoration: none; cursor: pointer; }
+
+    /* מסך אימות */
+    .verify-screen {
+      display: none; flex-direction: column;
+      align-items: center; text-align: center; gap: 12px; padding: 4px 0;
+    }
+    .verify-icon { font-size: 2.2rem; }
+    .verify-title { font-size: 0.95rem; font-weight: 700; color: #26215C; }
+    .verify-desc { font-size: 0.82rem; color: #6b7280; line-height: 1.65; }
+    .verify-email { color: #26215C; font-weight: 600; direction: ltr; display: inline-block; }
+    .btn-resend {
+      width: 100%; padding: 11px; background: #534AB7;
+      border: none; border-radius: 9px; color: white;
+      font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .btn-resend:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-back { background: none; border: none; color: #9b94cc; font-size: 12px; cursor: pointer; font-family: inherit; text-decoration: underline; }
+
+    @media (max-width: 500px) {
+      body {
+        align-items: flex-start;
+        padding: 2.5rem 1.25rem 1rem;
+      }
+      .notebook-bg { height: 40vh; }
+      .container { padding-bottom: 100px; }
+      .logo-section { margin-top: 0.5rem; margin-bottom: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <svg class="notebook-bg" viewBox="0 0 620 260" preserveAspectRatio="xMidYMax meet">
+    <ellipse cx="310" cy="258" rx="280" ry="5" fill="#c8c2f0" opacity=".12"/>
+    <rect x="10" y="0" width="292" height="254" rx="5" fill="white" opacity=".7" stroke="#e0dcf5" stroke-width=".8"/>
+    <line x1="46" y1="0" x2="46" y2="254" stroke="#f9c0c0" stroke-width="1.2" opacity=".4"/>
+    <line x1="20" y1="30"  x2="298" y2="30"  stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <line x1="20" y1="55"  x2="298" y2="55"  stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <line x1="20" y1="80"  x2="298" y2="80"  stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <line x1="20" y1="105" x2="298" y2="105" stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <line x1="20" y1="130" x2="298" y2="130" stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <line x1="20" y1="155" x2="298" y2="155" stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <line x1="20" y1="180" x2="298" y2="180" stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <line x1="20" y1="205" x2="298" y2="205" stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <line x1="20" y1="230" x2="298" y2="230" stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <rect x="56" y="20" width="7" height="7" rx="1.5" fill="none" stroke="#c8c2f0" stroke-width="1" opacity=".6"/>
+    <line x1="68" y1="24" x2="180" y2="24" stroke="#d8d4f0" stroke-width=".8" opacity=".6" stroke-linecap="round"/>
+    <rect x="56" y="45" width="7" height="7" rx="1.5" fill="#AFA9EC" opacity=".4"/>
+    <line x1="68" y1="49" x2="200" y2="49" stroke="#d8d4f0" stroke-width=".8" opacity=".5" stroke-linecap="round"/>
+    <rect x="56" y="70" width="7" height="7" rx="1.5" fill="none" stroke="#c8c2f0" stroke-width="1" opacity=".6"/>
+    <line x1="68" y1="74" x2="160" y2="74" stroke="#d8d4f0" stroke-width=".8" opacity=".6" stroke-linecap="round"/>
+    <rect x="318" y="0" width="292" height="254" rx="5" fill="white" opacity=".7" stroke="#e0dcf5" stroke-width=".8"/>
+    <line x1="574" y1="0" x2="574" y2="254" stroke="#f9c0c0" stroke-width="1.2" opacity=".4"/>
+    <line x1="322" y1="30"  x2="606" y2="30"  stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <line x1="322" y1="55"  x2="606" y2="55"  stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <line x1="322" y1="80"  x2="606" y2="80"  stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <line x1="322" y1="105" x2="606" y2="105" stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <line x1="322" y1="130" x2="606" y2="130" stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <line x1="322" y1="155" x2="606" y2="155" stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <line x1="322" y1="180" x2="606" y2="180" stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <line x1="322" y1="205" x2="606" y2="205" stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <line x1="322" y1="230" x2="606" y2="230" stroke="#e0dcf5" stroke-width=".7" opacity=".7"/>
+    <rect x="328" y="20" width="7" height="7" rx="1.5" fill="#AFA9EC" opacity=".4"/>
+    <line x1="340" y1="24" x2="460" y2="24" stroke="#d8d4f0" stroke-width=".8" opacity=".5" stroke-linecap="round"/>
+    <rect x="328" y="45" width="7" height="7" rx="1.5" fill="none" stroke="#c8c2f0" stroke-width="1" opacity=".6"/>
+    <line x1="340" y1="49" x2="430" y2="49" stroke="#d8d4f0" stroke-width=".8" opacity=".6" stroke-linecap="round"/>
+    <rect x="328" y="70" width="7" height="7" rx="1.5" fill="none" stroke="#c8c2f0" stroke-width="1" opacity=".6"/>
+    <line x1="340" y1="74" x2="480" y2="74" stroke="#d8d4f0" stroke-width=".8" opacity=".5" stroke-linecap="round"/>
+    <rect x="298" y="0" width="24" height="254" rx="4" fill="#7F77DD" opacity=".15"/>
+    <circle cx="310" cy="45"  r="4.5" fill="#f4f3fb" stroke="#c8c2f0" stroke-width="1"/>
+    <circle cx="310" cy="100" r="4.5" fill="#f4f3fb" stroke="#c8c2f0" stroke-width="1"/>
+    <circle cx="310" cy="155" r="4.5" fill="#f4f3fb" stroke="#c8c2f0" stroke-width="1"/>
+    <circle cx="310" cy="210" r="4.5" fill="#f4f3fb" stroke="#c8c2f0" stroke-width="1"/>
+  </svg>
+
+  <div class="container">
+
+    <div class="logo-section f1">
+      <div class="icon-ring-container">
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring-2"></div>
+        <div class="icon-circle">
+          <svg width="28" height="28" viewBox="0 0 14 14" fill="none">
+            <polyline points="2,7 6,11 12,3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="logo-title">
+        <h1>Checker</h1>
+        <p>המטלות שלך, מסודרות</p>
+      </div>
+    </div>
+
+    <div class="card f2" id="auth-card">
+      <div class="field" id="email-field">
+        <label for="email">אימייל</label>
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="field" id="password-field">
+        <label for="password">סיסמה</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" minlength="6">
+      </div>
+      <div class="forgot" id="forgot-row">
+        <a href="#">שכחתי סיסמה</a>
+      </div>
+      <div class="message-box" id="message-box"></div>
+      <button class="btn-login" id="submit-btn" onclick="handleSubmit()">כניסה</button>
+
+      <div id="google-section">
+        <div class="auth-divider"><span>או</span></div>
+        <button class="btn-google" onclick="signInWithGoogle()">
+          <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+            <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+            <path d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
+            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 6.293C4.672 4.166 6.656 3.58 9 3.58z" fill="#EA4335"/>
+          </svg>
+          המשך עם Google
+        </button>
+      </div>
+
+      <div class="verify-screen" id="verify-screen">
+        <div class="verify-icon">📧</div>
+        <div class="verify-title">בדוק את האימייל שלך</div>
+        <div class="verify-desc">
+          שלחנו קישור אימות אל<br>
+          <span class="verify-email" id="verify-email"></span>
+        </div>
+        <button class="btn-resend" id="resend-btn" onclick="resendVerification()">שלח שוב</button>
+        <button class="btn-back" onclick="backToLogin()">חזור להתחברות</button>
+      </div>
+    </div>
+
+    <p class="bottom-text f3" id="toggle-link">
+      אין לך חשבון? <a onclick="switchMode()">הרשמה</a>
+    </p>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const { createClient } = supabase;
+    const sb = createClient(
+      'https://rcngaonfuljhtthsvpap.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjbmdhb25mdWxqaHR0aHN2cGFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjUyMjMsImV4cCI6MjA5MjUwMTIyM30.5Ig-xpFdKGcK7U_l1jauGb8dSci6atmJoDng2p1A9N0'
+    );
+
+    let mode = 'login';
+    let pendingEmail = '';
+
+    async function init() {
+      sb.auth.onAuthStateChange((event, session) => {
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+          window.location.href = 'dashboard.html';
+        }
+      });
+
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('code')) {
+        const { data, error } = await sb.auth.exchangeCodeForSession(window.location.href);
+        if (data?.session) { window.location.href = 'dashboard.html'; return; }
+        window.history.replaceState({}, '', window.location.pathname);
+        if (error) showMessage('הקישור פג תוקף או כבר נוצל. נסה להתחבר שוב או שלח קישור אימות חדש.', 'error');
+        return;
+      }
+
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) window.location.href = 'dashboard.html';
+
+      if (params.get('signup')) switchMode();
+    }
+    init();
+
+    function switchMode() {
+      mode = mode === 'login' ? 'signup' : 'login';
+      const isLogin = mode === 'login';
+      document.getElementById('submit-btn').textContent = isLogin ? 'כניסה' : 'צור חשבון';
+      document.getElementById('forgot-row').style.display = isLogin ? 'block' : 'none';
+      document.getElementById('toggle-link').innerHTML = isLogin
+        ? 'אין לך חשבון? <a onclick="switchMode()">הרשמה</a>'
+        : 'כבר יש לך חשבון? <a onclick="switchMode()">התחברות</a>';
+      document.getElementById('password').autocomplete = isLogin ? 'current-password' : 'new-password';
+      hideMessage();
+    }
+
+    function showMessage(text, type) {
+      const el = document.getElementById('message-box');
+      el.textContent = text;
+      el.className = 'message-box ' + type;
+      el.style.display = 'block';
+    }
+    function hideMessage() { document.getElementById('message-box').style.display = 'none'; }
+
+    function showVerifyScreen(email) {
+      pendingEmail = email;
+      document.getElementById('verify-email').textContent = email;
+      document.getElementById('email-field').style.display    = 'none';
+      document.getElementById('password-field').style.display = 'none';
+      document.getElementById('forgot-row').style.display     = 'none';
+      document.getElementById('message-box').style.display    = 'none';
+      document.getElementById('submit-btn').style.display     = 'none';
+      document.getElementById('google-section').style.display = 'none';
+      document.getElementById('toggle-link').style.display    = 'none';
+      document.getElementById('verify-screen').style.display  = 'flex';
+    }
+
+    function backToLogin() {
+      document.getElementById('email-field').style.display    = 'flex';
+      document.getElementById('password-field').style.display = 'flex';
+      document.getElementById('forgot-row').style.display     = 'block';
+      document.getElementById('submit-btn').style.display     = 'block';
+      document.getElementById('google-section').style.display = 'block';
+      document.getElementById('toggle-link').style.display    = 'block';
+      document.getElementById('verify-screen').style.display  = 'none';
+      mode = 'login';
+      document.getElementById('submit-btn').textContent = 'כניסה';
+      document.getElementById('toggle-link').innerHTML = 'אין לך חשבון? <a onclick="switchMode()">הרשמה</a>';
+    }
+
+    async function signInWithGoogle() {
+      await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin }
+      });
+    }
+
+    async function resendVerification() {
+      const btn = document.getElementById('resend-btn');
+      btn.disabled = true; btn.textContent = 'שולח...';
+      const { error } = await sb.auth.resend({ type: 'signup', email: pendingEmail });
+      btn.textContent = error ? 'שגיאה — נסה שוב' : '✓ נשלח!';
+      setTimeout(() => { btn.disabled = false; btn.textContent = 'שלח שוב'; }, 3000);
+    }
+
+    async function resendFromLogin() {
+      const { error } = await sb.auth.resend({ type: 'signup', email: pendingEmail });
+      showMessage(error ? 'שגיאה בשליחה — נסה שוב.' : '✓ קישור אימות נשלח! בדוק את תיבת הדואר.', error ? 'error' : 'success');
+    }
+
+    async function handleSubmit() {
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const btn      = document.getElementById('submit-btn');
+      hideMessage();
+      btn.disabled = true;
+      btn.textContent = mode === 'login' ? 'מתחבר...' : 'יוצר חשבון...';
+
+      if (mode === 'login') {
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) {
+          const isUnconfirmed = error.message.includes('Email not confirmed');
+          showMessage(
+            isUnconfirmed
+              ? 'האימייל שלך לא אומת עדיין. בדוק את תיבת הדואר (כולל ספאם).'
+              : error.message,
+            'error'
+          );
+          if (isUnconfirmed) {
+            pendingEmail = email;
+            const resendLink = document.createElement('div');
+            resendLink.style.cssText = 'margin-top:0.5rem;font-size:0.85rem;text-align:center';
+            resendLink.innerHTML = '<a onclick="resendFromLogin()" style="color:var(--accent);cursor:pointer;text-decoration:underline">שלח קישור אימות מחדש</a>';
+            document.getElementById('message-box').appendChild(resendLink);
+          }
+          btn.disabled = false; btn.textContent = 'כניסה';
+        } else {
+          window.location.href = 'dashboard.html';
+        }
+      } else {
+        const { data, error } = await sb.auth.signUp({
+          email, password,
+          options: { emailRedirectTo: window.location.origin }
+        });
+        if (error) {
+          showMessage(error.message, 'error');
+          btn.disabled = false; btn.textContent = 'צור חשבון';
+        } else if (data.session) {
+          window.location.href = 'onboarding.html';
+        } else {
+          showVerifyScreen(email);
+        }
+      }
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Enter') handleSubmit(); });
+  </script>
+  <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');</script>
+</body>
+</html>

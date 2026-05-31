@@ -499,7 +499,7 @@
     async function init() {
       applyDark(localStorage.getItem('dark_mode') === 'true');
       const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.href = 'index.html'; return; }
+      if (!session) { window.location.href = 'login.html'; return; }
       currentUser = session.user;
       currentSort = localStorage.getItem(sortKey()) || 'date';
       if (currentSort === 'status') { currentSort = 'date'; localStorage.setItem(sortKey(), 'date'); }
@@ -1520,7 +1520,7 @@
 
     async function logout() {
       await sb.auth.signOut();
-      window.location.href = 'index.html';
+      window.location.href = 'login.html';
     }
 
     document.addEventListener('click', function(e) {
