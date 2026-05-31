@@ -1,6 +1,7 @@
-const CACHE = 'checker-static-v8';
+const CACHE = 'checker-static-v9';
 
 const PRECACHE = [
+  '/index.html',
   '/login.html',
   '/dashboard.html',
   '/onboarding.html',
