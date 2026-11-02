@@ -817,7 +817,8 @@
       if (!fetchRes.ok) {
         showSyncMessage(fetchJson.outdated_moodle
           ? outdatedMoodleMessage(fetchJson.outdated_moodle)
-          : (fetchJson.error || 'הסנכרון נכשל.'), 'error');
+          : (fetchJson.error || 'הסנכרון נכשל.'), 'error',
+          fetchJson.outdated_moodle && outdatedMoodleLink(fetchJson.outdated_moodle));
         btn.disabled = false;
         btn.textContent = 'סנכרן';
         return;
@@ -842,7 +843,8 @@
       const msg = `סונכרנו ${fetchJson.count} אירועים · נמצאו ${classifyJson.homework_added} מטלות חדשות` +
         (classifyJson.uncertain_count > 0 ? ` · ${classifyJson.uncertain_count} דורשות אישור` : '');
       if (fetchJson.outdated_moodle) {
-        showSyncMessage(outdatedMoodleMessage(fetchJson.outdated_moodle) + ' (' + msg + ')', 'error');
+        showSyncMessage(outdatedMoodleMessage(fetchJson.outdated_moodle) + ' (' + msg + ')', 'error',
+          outdatedMoodleLink(fetchJson.outdated_moodle));
       } else {
         showSyncMessage(msg, 'success');
       }
@@ -857,13 +859,26 @@
 
     function outdatedMoodleMessage({ saved, current }) {
       return `הקישור השמור שלך הוא מ-Moodle של שנה קודמת (${saved}), ולכן מטלות חדשות לא יופיעו. ` +
-        `צרו קישור iCal חדש ב-${current} ועדכנו אותו בהגדרות.`;
+        `צרו קישור iCal חדש ב-${current} (כל האירועים, 60 הימים שחלפו ו-60 הימים הבאים) ועדכנו אותו בהגדרות.`;
     }
 
-    function showSyncMessage(text, type) {
+    function outdatedMoodleLink({ current }) {
+      return { href: `https://${current}/calendar/export.php`, text: `פתחו את דף ייצוא לוח השנה ב-${current} ↗` };
+    }
+
+    function showSyncMessage(text, type, link) {
       const el = document.getElementById('sync-message');
       if (!text) { el.style.display = 'none'; return; }
       el.textContent = text;
+      if (link) {
+        const a = document.createElement('a');
+        a.href = link.href;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = link.text;
+        a.style.cssText = 'display:block;margin-top:0.5rem;color:inherit;font-weight:bold;text-decoration:underline';
+        el.appendChild(a);
+      }
       el.className = 'message ' + type;
       el.style.display = 'block';
     }
