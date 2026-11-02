@@ -27,6 +27,37 @@ function fetchIcal(url, depth = 0) {
   });
 }
 
+// moodle.technion.ac.il redirects to this year's Moodle (e.g. moodle26.technion.ac.il)
+function currentMoodleHost() {
+  return new Promise((resolve) => {
+    const req = https.request('https://moodle.technion.ac.il/', { method: 'HEAD', timeout: 3000 }, (res) => {
+      try {
+        resolve(new URL(res.headers.location).hostname);
+      } catch (_) {
+        resolve(null);
+      }
+      res.resume();
+    });
+    req.on('timeout', () => req.destroy());
+    req.on('error', () => resolve(null));
+    req.end();
+  });
+}
+
+// Returns { saved, current } when the saved link is from another year's Moodle, otherwise null
+async function checkOutdatedMoodle(url) {
+  let savedHost;
+  try {
+    savedHost = new URL(url).hostname;
+  } catch (_) {
+    return null;
+  }
+  if (!/^moodle\d+\.technion\.ac\.il$/.test(savedHost)) return null;
+  const current = await currentMoodleHost();
+  if (!current || current === savedHost) return null;
+  return { saved: savedHost, current };
+}
+
 function serializeEvent(e) {
   const out = {};
   for (const [key, val] of Object.entries(e)) {
@@ -74,12 +105,14 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'No Moodle iCal URL saved. Add it in Settings first.' });
   }
 
+  const outdatedMoodle = await checkOutdatedMoodle(profile.moodle_ical_url);
+
   let parsed;
   try {
     const icalText = await fetchIcal(profile.moodle_ical_url);
     parsed = ical.sync.parseICS(icalText);
   } catch (err) {
-    return res.status(400).json({ error: 'Could not fetch Moodle calendar: ' + err.message });
+    return res.status(400).json({ error: 'Could not fetch Moodle calendar: ' + err.message, outdated_moodle: outdatedMoodle });
   }
 
   const rows = Object.values(parsed)
@@ -95,7 +128,7 @@ module.exports = async function handler(req, res) {
     }));
 
   if (rows.length === 0) {
-    return res.status(200).json({ success: true, count: 0, message: 'No events found in your Moodle calendar.' });
+    return res.status(200).json({ success: true, count: 0, message: 'No events found in your Moodle calendar.', outdated_moodle: outdatedMoodle });
   }
 
   const { error: upsertError } = await sb
@@ -106,5 +139,5 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Failed to save events: ' + upsertError.message });
   }
 
-  return res.status(200).json({ success: true, count: rows.length });
+  return res.status(200).json({ success: true, count: rows.length, outdated_moodle: outdatedMoodle });
 };

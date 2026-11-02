@@ -272,7 +272,7 @@
           </div>
           <div class="form-group" style="margin-top:0.75rem">
             <label for="settings-moodle-url">קישור Moodle iCal</label>
-            <input type="url" id="settings-moodle-url" dir="ltr" placeholder="https://moodle25.technion.ac.il/calendar/export_execute.php?...">
+            <input type="url" id="settings-moodle-url" dir="ltr" placeholder="https://moodle26.technion.ac.il/calendar/export_execute.php?...">
           </div>
           <div id="settings-message" style="display:none" class="message"></div>
           <button class="btn-yes" style="width:100%;margin-top:0.75rem" onclick="saveSettings()">שמור קישור</button>
@@ -815,7 +815,9 @@
       const fetchJson = await fetchRes.json();
 
       if (!fetchRes.ok) {
-        showSyncMessage(fetchJson.error || 'הסנכרון נכשל.', 'error');
+        showSyncMessage(fetchJson.outdated_moodle
+          ? outdatedMoodleMessage(fetchJson.outdated_moodle)
+          : (fetchJson.error || 'הסנכרון נכשל.'), 'error');
         btn.disabled = false;
         btn.textContent = 'סנכרן';
         return;
@@ -839,7 +841,11 @@
 
       const msg = `סונכרנו ${fetchJson.count} אירועים · נמצאו ${classifyJson.homework_added} מטלות חדשות` +
         (classifyJson.uncertain_count > 0 ? ` · ${classifyJson.uncertain_count} דורשות אישור` : '');
-      showSyncMessage(msg, 'success');
+      if (fetchJson.outdated_moodle) {
+        showSyncMessage(outdatedMoodleMessage(fetchJson.outdated_moodle) + ' (' + msg + ')', 'error');
+      } else {
+        showSyncMessage(msg, 'success');
+      }
 
       // Step 3: show uncertain popup if needed, then load assignments
       if (classifyJson.uncertain_events?.length > 0) {
@@ -847,6 +853,11 @@
       } else {
         await loadAssignments();
       }
+    }
+
+    function outdatedMoodleMessage({ saved, current }) {
+      return `הקישור השמור שלך הוא מ-Moodle של שנה קודמת (${saved}), ולכן מטלות חדשות לא יופיעו. ` +
+        `צרו קישור iCal חדש ב-${current} ועדכנו אותו בהגדרות.`;
     }
 
     function showSyncMessage(text, type) {
